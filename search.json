@@ -102,7 +102,7 @@
     "href": "ecosystem.html#architecture",
     "title": "The Ecosystem",
     "section": "Architecture",
-    "text": "Architecture\n\nA few examples of functions:\nalarm_pareto() counts alarm frequencies.\nspc_chart() plots a control chart.\nlyo_batch() simulates a freeze-drying batch.\nA function, a simulator, and a grammar rule are all bricks.\nBricks snap together into walls. Walls build houses – a CPV report, a maintenance dashboard, an audit trail review.\n\n →  → \nThe same brick, like spc_chart(), may appear in different houses.\nThe context changes. The function does not.\n\n\n\n\n\ngraph TD\n    D1[\"&lt;b&gt;Discrete events&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarms, states, entries...&lt;/small&gt;\"] --&gt; M1[\"&lt;b&gt;machinelogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarm_pareto(), spc_chart(), connect_fmea_to_log()...&lt;/small&gt;\"]\n    D2[\"&lt;b&gt;Continuous measurements&lt;/b&gt;&lt;br/&gt;&lt;small&gt;temperature, pressure, load...&lt;/small&gt;\"] --&gt; M2[\"&lt;b&gt;processlogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;lyo_batch()...&lt;/small&gt;\"]\n\n    M1 --&gt; P1[\"Part I -- &lt;b&gt;Pharma & GxP&lt;/b&gt;&lt;br/&gt;&lt;small&gt;CPV · audit trail · FMEA · ...&lt;/small&gt;\"]\n    M1 --&gt; P2[\"Part II -- &lt;b&gt;Operations & I4.0&lt;/b&gt;&lt;br/&gt;&lt;small&gt;OEE analysis · predictive maintenance · ...&lt;/small&gt;\"]\n    M2 --&gt; P1\n    M2 --&gt; P2"
+    "text": "Architecture\n\nA few examples of functions:\nalarm_pareto() counts alarm frequencies.\nspc_chart() plots a control chart.\nlyo_batch() simulates a freeze-drying batch.\nA function, a simulator, and a grammar rule are all bricks.\nBricks snap together into walls. Walls build houses – a CPV report, a maintenance dashboard, an audit trail review.\n\n →  → \nThe same brick, like spc_chart(), may appear in different houses.\nThe context changes. The function does not.\n\n\n\n\n\ngraph TD\n    D1[\"&lt;b&gt;Discrete events&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarms, states, entries...&lt;/small&gt;\"] --&gt; M1[\"&lt;b&gt;machinelogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarm_pareto(), spc_chart(), connect_fmea_to_log()...&lt;/small&gt;\"]\n    D2[\"&lt;b&gt;Continuous measurements&lt;/b&gt;&lt;br/&gt;&lt;small&gt;temperature, pressure, load...&lt;/small&gt;\"] --&gt; M2[\"&lt;b&gt;processlogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;lyo_batch()...&lt;/small&gt;\"]\n\n    M1 --&gt; P1[\"Part I -- &lt;b&gt;Pharma & GxP&lt;/b&gt;&lt;br/&gt;&lt;small&gt;CPV · audit trail · FMEA · ...&lt;/small&gt;\"]\n    M1 --&gt; P2[\"Part II -- &lt;b&gt;Operations & I4.0/I5.0&lt;/b&gt;&lt;br/&gt;&lt;small&gt;OEE analysis · predictive maintenance · ...&lt;/small&gt;\"]\n    M2 --&gt; P1\n    M2 --&gt; P2"
   },
   {
     "objectID": "ecosystem.html#the-datasets",
@@ -135,7 +135,7 @@
   {
     "objectID": "coming-soon.html",
     "href": "coming-soon.html",
-    "title": "Part II – Operations & I4.0",
+    "title": "Part II – Operations & I4.0/I5.0",
     "section": "",
     "text": "This part is in preparation.\nTopics planned: OEE and energy analytics, alarm rationalization, predictive maintenance, Industry 5.0 human-centric monitoring."
   },
@@ -144,7 +144,7 @@
     "href": "index.html",
     "title": "\nThe companion site toThe Unread Factory\n",
     "section": "",
-    "text": "Reading the Machine\n\n\nThe companion site toThe Unread Factory\n\n\nProcess data has piled up for years.Time to make it speak. \n\nExplore the Toolbox →\n\n\n\n\nThe Unread Factory is a LinkedIn series about treating process data like evidence. \n\n\nThis site is where the methodology lives.\n\n\nThe Toolbox is the starting point.\n\n\nPart I (Pharma & GxP) and Part II (Operations & I4.0) will show it applied – both on their way.\n\n\nFor the full picture, see The Ecosystem.\n\n\n\n\n\n\n\n\nflowchart TD\n    L1[\"PLC\"]\n    L2[\"SCADA/HMI\"]\n    L3[\"Piloting layer\"]\n    L4[\"Historian\"]\n    L5[\"MES\"]\n    L6[\"Analytics\"]\n\n    L1 --&gt; L2\n    L2 --&gt; L4\n    L2 &lt;--&gt; L3\n    L4 --&gt; L6\n    L3 --&gt; L5\n    L5 --&gt; L6\n\n\n\n\n\n\n\n\n\n\nEach chapter is made with  code, on public datasets and open simulators."
+    "text": "Reading the Machine\n\n\nThe companion site toThe Unread Factory\n\n\nProcess data has piled up for years.Time to make it speak. \n\nExplore the Toolbox →\n\n\n\n\nThe Unread Factory is a LinkedIn series about treating process data like evidence. \n\n\nThis site is where the methodology lives.\n\n\nThe Toolbox is the starting point.\n\n\nPart I (Pharma & GxP) and Part II (Operations & I4.0/I5.0) will show it applied – both on their way.\n\n\nFor the full picture, see The Ecosystem.\n\n\n\n\n\n\n\n\nflowchart TD\n    L1[\"PLC\"]\n    L2[\"SCADA/HMI\"]\n    L3[\"Piloting layer\"]\n    L4[\"Historian\"]\n    L5[\"MES\"]\n    L6[\"Analytics\"]\n\n    L1 --&gt; L2\n    L2 --&gt; L4\n    L2 &lt;--&gt; L3\n    L4 --&gt; L6\n    L3 --&gt; L5\n    L5 --&gt; L6\n\n\n\n\n\n\n\n\n\n\nEach chapter is made with  code, on public datasets and open simulators."
   },
   {
     "objectID": "toolbox/index.html",
