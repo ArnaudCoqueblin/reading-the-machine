@@ -1,0 +1,187 @@
+---
+title: "Detecting equipment drift before the deviation."
+subtitle: "How frozen baselines and the right rule make drift visible."
+date: 2026-05-02
+categories: [spc, lyo]
+image: "../HEX/ideogram-v3.0_coins_arrondis.jpg"
+order: 2
+---
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(patchwork)
+devtools::load_all(here::here("..", "machinelogR"), quiet = TRUE)
+
+fds_dir <- here::here("..", "FDSim")
+for (f in list.files(file.path(fds_dir, "R"), pattern = "\\.R$", full.names = TRUE))
+  source(f)
+
+metrics <- readRDS(file.path(fds_dir, "sandbox", "sim_pump_seed13.rds")) |>
+  mutate(batch_date = as.Date("2023-01-01") + (batch_id - 1) * 14)
+
+phase1     <- metrics |> filter(batch_id <= 15)
+phase1_end <- metrics$batch_date[15]
+
+bl_pump  <- spc_baseline(phase1, variable = "pump_load",    time_col = "batch_date")
+bl_pch   <- spc_baseline(phase1, variable = "P_ch_mean_Pa", time_col = "batch_date")
+bl_tvial <- spc_baseline(phase1, variable = "T_vial_max_C", time_col = "batch_date")
+
+chart_pump  <- spc_chart(metrics, variable = "pump_load",
+                          time_col = "batch_date", rules = 5L, cl_from = bl_pump)
+chart_pch   <- spc_chart(metrics, variable = "P_ch_mean_Pa",
+                          time_col = "batch_date", rules = 1L, cl_from = bl_pch)
+chart_tvial <- spc_chart(metrics, variable = "T_vial_max_C",
+                          time_col = "batch_date", rules = 1L, cl_from = bl_tvial)
+
+first_pump  <- min(chart_pump$violations$index)
+first_pch   <- min(chart_pch$violations$index)
+first_tvial <- min(chart_tvial$violations$index)
+
+make_i_chart <- function(chart_res, data, var, tcol, title_lbl, phase1_end, y_lab = NULL) {
+  cl    <- chart_res$control_limits
+  x_min <- min(data[[tcol]])
+  x_max <- max(data[[tcol]])
+
+  first_date <- if (nrow(chart_res$violations) > 0) min(chart_res$violations$date) else NA
+
+  df <- data |> mutate(
+    point_type = case_when(
+      !is.na(first_date) & .data[[tcol]] == first_date ~ "first",
+      .data[[tcol]] %in% chart_res$violations$date     ~ "subsequent",
+      TRUE                                              ~ "normal"
+    )
+  )
+
+  ggplot(df, aes(x = .data[[tcol]], y = .data[[var]])) +
+    annotate("rect",
+      xmin = x_min, xmax = phase1_end,
+      ymin = -Inf, ymax = Inf, fill = "#0f766e", alpha = 0.07) +
+    annotate("text",
+      x = x_min, y = Inf, label = "Phase I", hjust = 0.1, vjust = 1.5,
+      size = 3, colour = "#0f766e", fontface = "bold") +
+    annotate("segment",
+      x = phase1_end, xend = x_max, y = cl$UCL, yend = cl$UCL,
+      linetype = "dashed", colour = "#d4333f", linewidth = 0.4) +
+    annotate("segment",
+      x = phase1_end, xend = x_max, y = cl$LCL, yend = cl$LCL,
+      linetype = "dashed", colour = "#d4333f", linewidth = 0.4) +
+    annotate("segment",
+      x = phase1_end, xend = x_max, y = cl$CL, yend = cl$CL,
+      colour = "#1d6fa4", linewidth = 0.6) +
+    geom_line(colour = "#1d6fa4", linewidth = 0.4) +
+    geom_point(aes(colour = point_type, size = point_type, alpha = point_type),
+               show.legend = FALSE) +
+    scale_colour_manual(values = c(
+      "normal"     = "#1d6fa4",
+      "first"      = "#d4333f",
+      "subsequent" = "#aaaaaa")) +
+    scale_size_manual(values  = c("normal" = 1.8, "first" = 3.2, "subsequent" = 1.4)) +
+    scale_alpha_manual(values = c("normal" = 1,   "first" = 1,   "subsequent" = 0.35)) +
+    annotate("text", x = phase1_end, y = cl$UCL,
+             label = "UCL", hjust = -0.1, vjust = -0.3, size = 2.8, colour = "#d4333f") +
+    annotate("text", x = phase1_end, y = cl$LCL,
+             label = "LCL", hjust = -0.1, vjust = 1.2, size = 2.8, colour = "#d4333f") +
+    labs(title = title_lbl, y = if (!is.null(y_lab)) y_lab else var, x = NULL) +
+    theme_minimal(base_size = 11) +
+    theme(plot.background = element_rect(fill = "#faf6f2", colour = NA))
+}
+```
+
+:::: panel-tabset
+## Summary
+
+::: callout-important
+## Regulatory context
+
+Stage 3 CPV requires ongoing statistical monitoring across batches to confirm the process remains in control. The equipment historian is typically outside that scope. This chapter covers what changes when it is brought in.
+:::
+
+Fifty batches. One vacuum pump degrading progressively. Three signals watching the same machine.
+
+```{r}
+#| label: fig-detection-cascade
+#| fig-cap: >
+#|   Three monitoring layers on 50 simulated batches (FDSim scenario C, seed 13).
+#|   Phase I baseline: batches 1-15 (shaded). Control limits frozen at Phase I.
+#|   Red points: Nelson rule violations.
+#| fig-width: 10
+#| fig-height: 10
+#| echo: false
+
+p1 <- make_i_chart(chart_pump,  metrics, "pump_load",    "batch_date",
+                   "Pump load (Historian)",          phase1_end, y_lab = "Motor load (a.u.)")
+p2 <- make_i_chart(chart_pch,   metrics, "P_ch_mean_Pa", "batch_date",
+                   "Chamber pressure: mean (MES)",   phase1_end, y_lab = "Pressure (Pa)")
+p3 <- make_i_chart(chart_tvial, metrics, "T_vial_max_C", "batch_date",
+                   "Product temperature: max (CPV)", phase1_end, y_lab = "Temperature (°C)")
+p1 / p2 / p3
+```
+
+The pump signal fires at **batch `r first_pump`**. Chamber pressure at **batch `r first_pch`**. Product temperature at **batch `r first_tvial`**.
+
+The data existed. The signals were there. The monitoring framework was not.
+
+The red dot marks the first alert. Subsequent violations are dimmed: once a drift is established, both R5 (pump) and R1 (pressure, temperature) flag nearly every batch. The first signal is the diagnostic one. The rest are noise from a chart that should have triggered an action already.
+
+## Method
+
+### Phase I / Phase II
+
+Limits are established on Phase I data. Once Phase II monitoring begins, they are frozen, and updated only when a confirmed improvement has produced a new, better stable baseline. Recalculating on degraded data masks the drift: the chart adjusts to the process instead of detecting it (Montgomery, *Introduction to Statistical Quality Control*).
+
+```{r}
+#| label: fig-antipattern
+#| fig-cap: >
+#|   Scenario C, pump load. Left: Phase I limits (correct). Right: all-data limits.
+#|   When limits drift with the process, the drift becomes invisible.
+#| fig-width: 11
+#| fig-height: 5
+#| echo: false
+#| warning: false
+
+bl_all    <- spc_baseline(metrics, variable = "pump_load", time_col = "batch_date")
+chart_all <- spc_chart(metrics, variable = "pump_load",
+                        time_col = "batch_date", rules = 5L, cl_from = bl_all)
+
+make_i_chart(chart_pump, metrics, "pump_load", "batch_date",
+             "Phase I limits (correct)", phase1_end) |
+make_i_chart(chart_all,  metrics, "pump_load", "batch_date",
+             "All-data limits (anti-pattern)", min(metrics$batch_date))
+```
+
+The left panel detects the drift. The right does not. Worse: an expanded UCL and R5, a rule designed for slow drifts, make each other less effective. The threshold moved with the process. The chart stays quiet.
+
+### Nelson rules
+
+Each rule encodes an assumption about the failure mode.
+
+**Rule 1** (1 point beyond 3-sigma): sudden shifts. Fires fast, requires a large deviation.
+
+**Rule 5** (2 of 3 consecutive points beyond 2-sigma, same side): slow drift. Catches gradual wear before it reaches the 3-sigma threshold.
+
+The choice of rule is a modelling decision, not a default setting.
+
+| Signal              | Failure mode                          | Rule             |
+|------------------------|------------------------|------------------------|
+| Pump load           | Progressive mechanical wear           | R5: slow drift   |
+| Chamber pressure    | Step change from pump failure or leak | R1: abrupt shift |
+| Product temperature | Step change at process limit          | R1: abrupt shift |
+
+Applying R1 to a pump signal means waiting for a catastrophic reading. By then, the process may already be affected.
+
+Rule selection depends on the assumed failure mode kinetics. CUSUM outperforms both R1 and R5 for slow drifts when early detection matters: at 1-sigma, CUSUM detects in ~10 batches against ~43 for Shewhart R1 (Montgomery, *Introduction to Statistical Quality Control*, Table 9.3).
+
+::::
+
+------------------------------------------------------------------------
+
+::: callout-note
+## Simulator
+
+The examples use **FDSim**, a physics-informed freeze-dryer simulator developed for this book. Full description, physical basis, and validation: [FDSim](../toolbox/fdsim.qmd){target="_blank"}.
+:::
