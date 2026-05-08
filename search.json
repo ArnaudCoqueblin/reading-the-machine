@@ -74,7 +74,7 @@
     "href": "toolbox/fdsim.html#almost-a-digital-twin",
     "title": "FDSim",
     "section": "Almost a digital twin",
-    "text": "Almost a digital twin\nFDSim is a generic model: the physics are fixed, the parameters are not.\ncalibrate() is the bridge: given real historian data, this function is designed to estimate the missing equipment-specific and product-specific parameters, and return a calibrated parameter set.\nThe rest of the chain (batch simulation, CPV charts, fault detection) remains unchanged.\nWhen real data are available, the generic model becomes a digital twin."
+    "text": "Almost a digital twin\nFDSim is a generic model: the physics are fixed, the parameters are not.\ncalibrate() is the bridge: given real historian data, this function is designed to estimate the missing equipment-specific and product-specific parameters, and return a calibrated parameter set.\nThe rest of the chain (batch simulation, CPV charts, fault detection) remains unchanged."
   },
   {
     "objectID": "ecosystem.html",
@@ -109,7 +109,7 @@
     "href": "ecosystem.html#the-datasets",
     "title": "The Ecosystem",
     "section": "The datasets",
-    "text": "The datasets\nAll datasets used here are either open data or generated on this site.\nPIADE (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on Kaggle. That’s what I used to build and test machinelogR on actual industrial data.\nFDSim is a freeze-dryer simulator I built for this site. You can see it in the Toolbox: the deviation at batch 50, the pump signal at batch 17.\nIndPenSim (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (industrialpenicillinsimulation.com). I use it to build and validate processlogR, and as a showcase for continuous bioprocess data.\nReal data from real plants exists. It won’t appear here – but the tools are built to read it."
+    "text": "The datasets\nAll datasets used here are either open data or generated on this site.\nPIADE (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on Kaggle. That’s what I used to build and test machinelogR on actual industrial data.\nFDSim is a freeze-dryer simulator I built for this site. You can explore it in the Toolbox.\nIndPenSim (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (industrialpenicillinsimulation.com). I use it to build and validate processlogR, and as a showcase for continuous bioprocess data.\nReal data from real plants exists. It won’t appear here – but the tools are built to read it."
   },
   {
     "objectID": "chapters/index.html",
