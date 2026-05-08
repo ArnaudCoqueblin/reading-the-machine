@@ -1,159 +1,5 @@
 [
   {
-    "objectID": "toolbox/spc-nelson.html",
-    "href": "toolbox/spc-nelson.html",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "",
-    "text": "Statistical process control applied to inter-batch data is not the same thing as real-time SPC on a production line. The rhythm is different, the signal is different, and the failure mode you are trying to catch is different.\nThis page describes the Phase I / Phase II framework as used in this site, and the eight Nelson rules as implemented in machinelogR."
-  },
-  {
-    "objectID": "toolbox/spc-nelson.html#the-core-idea",
-    "href": "toolbox/spc-nelson.html#the-core-idea",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "The core idea",
-    "text": "The core idea\nA control chart answers one question: is this batch consistent with the reference population?\nTo answer it, you need two things. A reference population (Phase I). And a set of rules that define “inconsistent” (Nelson, or Western Electric).\nThe order matters. Limits are computed once, on data you believe is stable. Then they are frozen. Everything that follows is compared against those fixed limits.\n\n\n\n\n\n\nWhy freeze the limits?\n\n\n\nA chart that recalculates its limits as new data arrives cannot detect a gradual drift: the limits drift with the process and the signal disappears. Phase I limits are established on a stable reference population and held fixed. This is the central principle of Phase I / Phase II SPC.\nIntroduction to Statistical Quality Control, Montgomery, 8th ed., Ch. 5."
-  },
-  {
-    "objectID": "toolbox/spc-nelson.html#phase-i-establishing-the-baseline",
-    "href": "toolbox/spc-nelson.html#phase-i-establishing-the-baseline",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "Phase I – establishing the baseline",
-    "text": "Phase I – establishing the baseline\nPhase I is not a burn-in period. It is a deliberate selection of batches that represent what “stable and controlled” looks like for this process.\nThe output is a set of control limits: center line (CL), upper control limit (UCL), and lower control limit (LCL), computed as CL +/- 3 standard deviations of the Phase I data.\nbl_pump &lt;- spc_baseline(phase1_data, variable = \"pump_load\", time_col = \"batch_date\")\nspc_baseline() returns a list with CL, UCL, LCL, and sigma – the frozen reference. It is computed once and passed explicitly to Phase II.\nThree decisions go into Phase I:\nWhich batches. They must represent normal operation. Batches with known anomalies, equipment changes, or formulation adjustments should be excluded. The number is a balance between statistical stability (more is better) and practical availability (you may only have ten validated batches at launch). Fifteen is a reasonable minimum for inter-batch SPC.\nWhich variable. A summary statistic per batch, not a time series. Mean, maximum, standard deviation – the choice depends on what the signal is supposed to capture. Maximum product temperature for collapse risk. Mean pump load for gradual mechanical wear. The choice is made before running the chart, not after.\nWhen to re-baseline. Never without justification. A validated change (equipment replacement, formulation update, process improvement) is a valid trigger. Data drift is not: if the process is drifting, re-baselining hides it."
-  },
-  {
-    "objectID": "toolbox/spc-nelson.html#phase-ii-monitoring-with-nelson-rules",
-    "href": "toolbox/spc-nelson.html#phase-ii-monitoring-with-nelson-rules",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "Phase II – monitoring with Nelson rules",
-    "text": "Phase II – monitoring with Nelson rules\nPhase II applies the frozen limits to each incoming batch and evaluates it against a set of pattern rules.\nNelson rules were formalized by Lloyd S. Nelson in Journal of Quality Technology (1984, Vol. 16, No. 4) as an extension of the original Western Electric Statistical Quality Control Handbook (1956). Montgomery summarizes them in Introduction to Statistical Quality Control (Ch. 5).\n\nThe eight rules\n\n\n\n\n\n\n\n\nRule\nCondition\nSignal detected\n\n\n\n\nR1\n1 point beyond +/-3sigma\nAcute anomaly\n\n\nR2\n9+ consecutive points on the same side of CL\nPersistent bias\n\n\nR3\n6+ consecutive points strictly monotone\nTrend\n\n\nR4\n14+ consecutive points alternating up/down\nSystematic oscillation\n\n\nR5\n2 out of 3 consecutive points beyond +/-2sigma (same side)\nSlow drift\n\n\nR6\n4 out of 5 consecutive points beyond +/-1sigma (same side)\nModerate drift\n\n\nR7\n15+ consecutive points within +/-1sigma\nVariance collapse (hugging)\n\n\nR8\n8+ consecutive points outside +/-1sigma (both sides)\nBimodality\n\n\n\nThe “signal detected” column is not in the original Nelson paper – it is a translation of the statistical condition into the process phenomenon each rule is designed to catch. R1 catches abrupt jumps. R5 and R6 catch gradual drifts that would never breach R1. R7 catches a suspicious reduction in variability, which can indicate a stuck sensor, a batch population that has narrowed artificially, or a process that has lost its natural variation.\nRules are not interchangeable. The choice of which rules to apply depends on the degradation mode you are monitoring for.\n\n\nSelecting rules for a signal\n\n\n\nDegradation mode\nRecommended rules\nRationale\n\n\n\n\nAbrupt failure\nR1\nSingle point breach is sufficient\n\n\nGradual mechanical wear\nR5, R6\nSlow drift, never reaches 3sigma\n\n\nProcess mean shift\nR1, R2\nJump then persistence\n\n\nSensor drift\nR3, R5\nMonotone or asymmetric drift\n\n\nSensor failure (stuck)\nR7\nVariance collapses\n\n\nMixed or unknown\nR1 + R5\nPragmatic minimum\n\n\n\nThe pump load scenario in the equipment-drift detection chapter uses R5. A degrading pump shows a slow, asymmetric increase in load over dozens of batches that never reaches 3-sigma until the equipment is already well into its failure trajectory. R5 was designed for exactly this."
-  },
-  {
-    "objectID": "toolbox/spc-nelson.html#machinelogr-spc_chart",
-    "href": "toolbox/spc-nelson.html#machinelogr-spc_chart",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "machinelogR – spc_chart()",
-    "text": "machinelogR – spc_chart()\nchart &lt;- spc_chart(\n  data     = metrics,\n  variable = \"pump_load\",\n  time_col = \"batch_date\",\n  rules    = 5L,          # Nelson R5\n  cl_from  = bl_pump      # Phase I baseline (frozen)\n)\nspc_chart() accepts a scalar or vector of rule numbers. rules = c(1L, 5L) applies both R1 and R5. All eight rules are implemented.\nThe return value is a list:\nchart$violations     # tibble: date, index, rule fired\nchart$control_limits # list: CL, UCL, LCL, sigma\nchart$n_violations   # integer\nchart$plot           # patchwork: I-chart + MR chart\nThe separation between cl_from (Phase I baseline) and data (Phase II input) is structural, not optional. Passing the same data to both would defeat the purpose."
-  },
-  {
-    "objectID": "toolbox/spc-nelson.html#in-practice",
-    "href": "toolbox/spc-nelson.html#in-practice",
-    "title": "SPC and Nelson rules for inter-batch monitoring",
-    "section": "In practice",
-    "text": "In practice\nThe full three-layer monitoring example – pump load, chamber pressure, product temperature, across 50 simulated batches – is in:\nDetecting equipment drift before the deviation"
-  },
-  {
-    "objectID": "toolbox/index.html",
-    "href": "toolbox/index.html",
-    "title": "Toolbox",
-    "section": "",
-    "text": "Methods are documented here as standalone references. Each is introduced in context through a Part I or Part II chapter, and general enough to apply across multiple cases.\n\n\n\n\n\n\n\n\n\nmachinelogR\n\n\nA grammar for machine log analytics.\n\n\n\n\n\n\n\n\n\n\n\n\n\nSPC and Nelson rules for inter-batch monitoring\n\n\nPhase I baseline, frozen limits, eight detection rules.\n\n\n\n\n\n\n\n\n\n\n\n\n\nFDSim\n\n\nA freeze-dryer simulator in \n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "\nThe companion site toThe Unread Factory\n",
-    "section": "",
-    "text": "Reading the Machine\n\n\nThe companion site toThe Unread Factory\n\n\nProcess data has piled up for years.Time to make it speak. \n\nExplore the Toolbox →\n\n\n\n\nThe Unread Factory is a LinkedIn series about treating process data like evidence. \n\n\nThis site is where the methodology lives.\n\n\nThe Toolbox is the starting point.\n\n\nPart I (Pharma & GxP) and Part II (Operations & I4.0) will show it applied – both on their way.\n\n\nFor the full picture, see The Ecosystem.\n\n\n\n\n\n\n\n\nflowchart TD\n    L1[\"PLC\"]\n    L2[\"SCADA/HMI\"]\n    L3[\"Piloting layer\"]\n    L4[\"Historian\"]\n    L5[\"MES\"]\n    L6[\"Analytics\"]\n\n    L1 --&gt; L2\n    L2 --&gt; L4\n    L2 &lt;--&gt; L3\n    L4 --&gt; L6\n    L3 --&gt; L5\n    L5 --&gt; L6\n\n\n\n\n\n\n\n\n\n\nEach chapter is made with  code, on public datasets and open simulators."
-  },
-  {
-    "objectID": "coming-soon.html",
-    "href": "coming-soon.html",
-    "title": "Part II – Operations & I4.0",
-    "section": "",
-    "text": "This part is in preparation.\nTopics planned: OEE and energy analytics, alarm rationalization, predictive maintenance, Industry 5.0 human-centric monitoring."
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "Reading the Machine",
-    "section": "",
-    "text": "Industrial pharmacist · Postgraduate degree in Bioprocess Engineering.\n25+ years of practice in pharmaceutical manufacturing,\nand a long habit of building  tools for whatever the data required.\n\n LinkedIn    GitHub    R language"
-  },
-  {
-    "objectID": "about.html#arnaud-coqueblin",
-    "href": "about.html#arnaud-coqueblin",
-    "title": "Reading the Machine",
-    "section": "",
-    "text": "Industrial pharmacist · Postgraduate degree in Bioprocess Engineering.\n25+ years of practice in pharmaceutical manufacturing,\nand a long habit of building  tools for whatever the data required.\n\n LinkedIn    GitHub    R language"
-  },
-  {
-    "objectID": "chapters/index.html",
-    "href": "chapters/index.html",
-    "title": "Part I – Pharma & GxP",
-    "section": "",
-    "text": "This part is in preparation.\nTopics planned: CPV and equipment monitoring, audit trail analytics, FMEA-driven signal selection, freeze-dryer case study."
-  },
-  {
-    "objectID": "ecosystem.html",
-    "href": "ecosystem.html",
-    "title": "The Ecosystem",
-    "section": "",
-    "text": "A packaging line, a fed-batch bioreactor, a pharmaceutical freeze-dryer, etc.\nThe freeze-dryer, for instance. The pump load was drifting from batch 17 . The deviation hit at batch 50 .\nBut the signal was there the whole time…"
-  },
-  {
-    "objectID": "ecosystem.html#different-machines-same-story",
-    "href": "ecosystem.html#different-machines-same-story",
-    "title": "The Ecosystem",
-    "section": "",
-    "text": "A packaging line, a fed-batch bioreactor, a pharmaceutical freeze-dryer, etc.\nThe freeze-dryer, for instance. The pump load was drifting from batch 17 . The deviation hit at batch 50 .\nBut the signal was there the whole time…"
-  },
-  {
-    "objectID": "ecosystem.html#two-types-of-signals",
-    "href": "ecosystem.html#two-types-of-signals",
-    "title": "The Ecosystem",
-    "section": "Two types of signals",
-    "text": "Two types of signals\nDiscrete events – alarms on/off, valve open/closed, operator entries…, timestamped.\nThis is what audit trails are made of. That’s what machinelogR reads.\nContinuous measurements – temperature, pressure, weight… over time.\nThis is typically what historians store. That’s what processlogR will handle.\nDifferent data. Same logic. Two sister packages."
-  },
-  {
-    "objectID": "ecosystem.html#architecture",
-    "href": "ecosystem.html#architecture",
-    "title": "The Ecosystem",
-    "section": "Architecture",
-    "text": "Architecture\n\nA few examples of functions:\nalarm_pareto() counts alarm frequencies.\nspc_chart() plots a control chart.\nlyo_batch() simulates a freeze-drying batch.\nA function, a simulator, and a grammar rule are all bricks.\nBricks connect into pipelines. And pipelines assemble to produce reports.\n →  → \nThe same brick, like spc_chart(), may show up in a CPV report or in a maintenance dashboard.\nThe context changes. The function does not.\n\n\n\n\n\ngraph TD\n    D1[\"&lt;b&gt;Discrete events&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarms, states, entries...&lt;/small&gt;\"] --&gt; M1[\"&lt;b&gt;machinelogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarm_pareto(), spc_chart(), connect_fmea_to_log()...&lt;/small&gt;\"]\n    D2[\"&lt;b&gt;Continuous measurements&lt;/b&gt;&lt;br/&gt;&lt;small&gt;temperature, pressure, load...&lt;/small&gt;\"] --&gt; M2[\"&lt;b&gt;processlogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;lyo_batch()...&lt;/small&gt;\"]\n\n    M1 --&gt; P1[\"Part I -- &lt;b&gt;Pharma & GxP&lt;/b&gt;&lt;br/&gt;&lt;small&gt;CPV · audit trail · FMEA · ...&lt;/small&gt;\"]\n    M1 --&gt; P2[\"Part II -- &lt;b&gt;Operations & I4.0&lt;/b&gt;&lt;br/&gt;&lt;small&gt;OEE analysis · predictive maintenance · ...&lt;/small&gt;\"]\n    M2 --&gt; P1\n    M2 --&gt; P2"
-  },
-  {
-    "objectID": "ecosystem.html#the-datasets",
-    "href": "ecosystem.html#the-datasets",
-    "title": "The Ecosystem",
-    "section": "The datasets",
-    "text": "The datasets\nAll datasets used here are either open data or generated on this site.\nPIADE (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on Kaggle. That’s what I used to build and test machinelogR on actual industrial data.\nFDSim is a freeze-dryer simulator I built for this site. You can see it in the Toolbox: the deviation at batch 50, the pump signal at batch 17.\nIndPenSim (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (industrialpenicillinsimulation.com). I use it to build and validate processlogR, and as a showcase for continuous bioprocess data.\nReal data from real plants exists. It won’t appear here – but the tools are built to read it."
-  },
-  {
-    "objectID": "toolbox/fdsim.html",
-    "href": "toolbox/fdsim.html",
-    "title": "FDSim",
-    "section": "",
-    "text": "I wanted real and challenging data to test the functions I had built.\nA freeze-dryer was the obvious choice: one of the most complex pieces of equipment I have worked with, but also one where open data is unavailable.\nSo I needed a simulator and I found one: LyoPRONTO, a Lyophilization Process Optimization Tool. Excellent. But written in Python, and designed to optimize the cycle, not to monitor the equipment.\nI decided to build one, brick by brick. Not a small task.\nThree things mattered:\n\nReproducibility : same inputs, same outputs, every time\nControlled faults : realistic failures, injected on demand\nOpen : nothing proprietary, nothing confidential\n\n\n\n\n\nLyoPRONTO\nFDSim\n\n\n\n\nPurpose\nProcess optimization\nEquipment monitoring\n\n\nProcess physics (sublimation, heat transfer)\nyes\nyes\n\n\nEquipment signals (pump, condenser, …)\nno\nyes\n\n\nBatch-to-batch variability\nno\nyes"
-  },
-  {
-    "objectID": "toolbox/fdsim.html#why-simulate",
-    "href": "toolbox/fdsim.html#why-simulate",
-    "title": "FDSim",
-    "section": "",
-    "text": "I wanted real and challenging data to test the functions I had built.\nA freeze-dryer was the obvious choice: one of the most complex pieces of equipment I have worked with, but also one where open data is unavailable.\nSo I needed a simulator and I found one: LyoPRONTO, a Lyophilization Process Optimization Tool. Excellent. But written in Python, and designed to optimize the cycle, not to monitor the equipment.\nI decided to build one, brick by brick. Not a small task.\nThree things mattered:\n\nReproducibility : same inputs, same outputs, every time\nControlled faults : realistic failures, injected on demand\nOpen : nothing proprietary, nothing confidential\n\n\n\n\n\nLyoPRONTO\nFDSim\n\n\n\n\nPurpose\nProcess optimization\nEquipment monitoring\n\n\nProcess physics (sublimation, heat transfer)\nyes\nyes\n\n\nEquipment signals (pump, condenser, …)\nno\nyes\n\n\nBatch-to-batch variability\nno\nyes"
-  },
-  {
-    "objectID": "toolbox/fdsim.html#physical-basis",
-    "href": "toolbox/fdsim.html#physical-basis",
-    "title": "FDSim",
-    "section": "Physical basis",
-    "text": "Physical basis\n\n\n\n\n\nflowchart LR\n    classDef hot  fill:#fff3e0,stroke:#e65100,color:#333\n    classDef warm fill:#fffde7,stroke:#f9a825,color:#333\n    classDef cold fill:#e3f2fd,stroke:#1565c0,color:#333\n    classDef pump fill:#f5f5f5,stroke:#9e9e9e,color:#333\n\n    subgraph CH[\"&lt;b&gt;Chamber&lt;/b&gt; · P_ch\"]\n        A[\"&lt;img src='https://api.iconify.design/lucide:flame.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Shelf&lt;/b&gt;&lt;br/&gt;T_shelf\"]:::hot --&gt;|heats| B[\"&lt;img src='https://api.iconify.design/lucide:flask-conical.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Product&lt;/b&gt;&lt;br/&gt;T_product\"]:::warm\n    end\n    subgraph TR[\"&lt;b&gt;Cold trap&lt;/b&gt; · P_ch\"]\n        D[\"&lt;img src='https://api.iconify.design/lucide:snowflake.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Condenser&lt;/b&gt;&lt;br/&gt;T_cond\"]:::cold\n    end\n    B --&gt;|water vapor| D\n    D --&gt;|maintains vacuum| E[\"&lt;img src='https://api.iconify.design/material-symbols:water-pump-outline.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Pump&lt;/b&gt;&lt;br/&gt;pump_load\"]:::pump\n    style CH fill:#f5f7fa,stroke:#b0bec5,color:#333\n    style TR fill:#f5f7fa,stroke:#b0bec5,color:#333\n\n\n\n\n\n\nShelf to product : heat flows through the vial bottom. This energy feeds sublimation.\nProduct to chamber : ice sublimates into vapor, driven by the vacuum. The dried cake resists the flow as the lyophilization progresses.\nChamber to cold trap : water vapor is captured by the condenser. The pump maintains the vacuum that keeps the whole process running.\n\n\n\n\n\n\n\n\nSignal simulated\nVariable\nWhat it represents\n\n\n\n\nShelf temperature\nT_shelf\nHeat delivered to the product\n\n\nProduct temperature\nT_product\nHow cold the product still is\n\n\nChamber pressure\nP_ch\nVacuum level driving sublimation\n\n\nCondenser temperature\nT_cond\nCold trap efficiency\n\n\nVacuum pump load\npump_load\nMechanical load on the vacuum system\n\n\n\n Each batch is a dataframe of timestamped readings.\nPrimary drying is the focus (where equipment monitoring matters most).\n\n\n\n\n\n\n\nPhase / signal\nStatus\n\n\n\n\nPrimary drying\nBenchmarked against LyoPRONTO: sublimation flux in close agreement\n\n\nFreezing\nSimulated, not benchmarked\n\n\nSecondary drying\nOut of scope: requires product-specific parameters not available from open data\n\n\nEquipment signals\nPhenomenological: plausible shapes, not benchmarked against real historian data"
-  },
-  {
-    "objectID": "toolbox/fdsim.html#controlled-failures",
-    "href": "toolbox/fdsim.html#controlled-failures",
-    "title": "FDSim",
-    "section": "Controlled failures",
-    "text": "Controlled failures\nThree failure modes can be injected at the parameter level.\n\n\n\n\n\n\n\n\n\nFault\nSignal\nProfile (50 batches)\nWhat to look for\n\n\n\n\nIsolated\nP_ch\n▂▂▂▂▂█▂▂▂▂\nSingle spike, R1\n\n\nDrift\npump_load\n▂▂▃▃▄▅▆▇█\nSlow rise, R5\n\n\n2 failures\npump_load + P_ch\n▂▂▃▄▅▆▇ + ▂▂▂▃▄▅▆\nTwo signals drifting together"
-  },
-  {
-    "objectID": "toolbox/fdsim.html#almost-a-digital-twin",
-    "href": "toolbox/fdsim.html#almost-a-digital-twin",
-    "title": "FDSim",
-    "section": "Almost a digital twin",
-    "text": "Almost a digital twin\nFDSim is a generic model: the physics are fixed, the parameters are not.\ncalibrate() is the bridge: given real historian data, this function is designed to estimate the missing equipment-specific and product-specific parameters, and return a calibrated parameter set.\nThe rest of the chain (batch simulation, CPV charts, fault detection) remains unchanged.\nWhen real data are available, the generic model becomes a digital twin."
-  },
-  {
     "objectID": "toolbox/machinelogr.html",
     "href": "toolbox/machinelogr.html",
     "title": "machinelogR",
@@ -194,5 +40,117 @@
     "title": "machinelogR",
     "section": "Access",
     "text": "Access\nI built machinelogR for my own analytical work.\nIt is not on CRAN and not publicly hosted, but I’m happy to share the philosophy."
+  },
+  {
+    "objectID": "toolbox/fdsim.html",
+    "href": "toolbox/fdsim.html",
+    "title": "FDSim",
+    "section": "",
+    "text": "I wanted real and challenging data to test the functions I had built.\nA freeze-dryer was the obvious choice: one of the most complex pieces of equipment I have worked with, but also one where open data is unavailable.\nSo I needed a simulator and I found one: LyoPRONTO, a Lyophilization Process Optimization Tool. Excellent. But written in Python, and designed to optimize the cycle, not to monitor the equipment.\nI decided to build one, brick by brick. Not a small task.\nThree things mattered:\n\nReproducibility : same inputs, same outputs, every time\nControlled faults : realistic failures, injected on demand\nOpen : nothing proprietary, nothing confidential\n\n\n\n\n\nLyoPRONTO\nFDSim\n\n\n\n\nPurpose\nProcess optimization\nEquipment monitoring\n\n\nProcess physics (sublimation, heat transfer)\nyes\nyes\n\n\nEquipment signals (pump, condenser, …)\nno\nyes\n\n\nBatch-to-batch variability\nno\nyes"
+  },
+  {
+    "objectID": "toolbox/fdsim.html#why-simulate",
+    "href": "toolbox/fdsim.html#why-simulate",
+    "title": "FDSim",
+    "section": "",
+    "text": "I wanted real and challenging data to test the functions I had built.\nA freeze-dryer was the obvious choice: one of the most complex pieces of equipment I have worked with, but also one where open data is unavailable.\nSo I needed a simulator and I found one: LyoPRONTO, a Lyophilization Process Optimization Tool. Excellent. But written in Python, and designed to optimize the cycle, not to monitor the equipment.\nI decided to build one, brick by brick. Not a small task.\nThree things mattered:\n\nReproducibility : same inputs, same outputs, every time\nControlled faults : realistic failures, injected on demand\nOpen : nothing proprietary, nothing confidential\n\n\n\n\n\nLyoPRONTO\nFDSim\n\n\n\n\nPurpose\nProcess optimization\nEquipment monitoring\n\n\nProcess physics (sublimation, heat transfer)\nyes\nyes\n\n\nEquipment signals (pump, condenser, …)\nno\nyes\n\n\nBatch-to-batch variability\nno\nyes"
+  },
+  {
+    "objectID": "toolbox/fdsim.html#physical-basis",
+    "href": "toolbox/fdsim.html#physical-basis",
+    "title": "FDSim",
+    "section": "Physical basis",
+    "text": "Physical basis\n\n\n\n\n\nflowchart LR\n    classDef hot  fill:#fff3e0,stroke:#e65100,color:#333\n    classDef warm fill:#fffde7,stroke:#f9a825,color:#333\n    classDef cold fill:#e3f2fd,stroke:#1565c0,color:#333\n    classDef pump fill:#f5f5f5,stroke:#9e9e9e,color:#333\n\n    subgraph CH[\"&lt;b&gt;Chamber&lt;/b&gt; · P_ch\"]\n        A[\"&lt;img src='https://api.iconify.design/lucide:flame.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Shelf&lt;/b&gt;&lt;br/&gt;T_shelf\"]:::hot --&gt;|heats| B[\"&lt;img src='https://api.iconify.design/lucide:flask-conical.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Product&lt;/b&gt;&lt;br/&gt;T_product\"]:::warm\n    end\n    subgraph TR[\"&lt;b&gt;Cold trap&lt;/b&gt; · P_ch\"]\n        D[\"&lt;img src='https://api.iconify.design/lucide:snowflake.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Condenser&lt;/b&gt;&lt;br/&gt;T_cond\"]:::cold\n    end\n    B --&gt;|water vapor| D\n    D --&gt;|maintains vacuum| E[\"&lt;img src='https://api.iconify.design/material-symbols:water-pump-outline.svg' width='32' height='32'/&gt;&lt;br/&gt;&lt;b&gt;Pump&lt;/b&gt;&lt;br/&gt;pump_load\"]:::pump\n    style CH fill:#f5f7fa,stroke:#b0bec5,color:#333\n    style TR fill:#f5f7fa,stroke:#b0bec5,color:#333\n\n\n\n\n\n\nShelf to product : heat flows through the vial bottom. This energy feeds sublimation.\nProduct to chamber : ice sublimates into vapor, driven by the vacuum. The dried cake resists the flow as the lyophilization progresses.\nChamber to cold trap : water vapor is captured by the condenser. The pump maintains the vacuum that keeps the whole process running.\n\n\n\n\n\n\n\n\nSignal simulated\nVariable\nWhat it represents\n\n\n\n\nShelf temperature\nT_shelf\nHeat delivered to the product\n\n\nProduct temperature\nT_product\nHow cold the product still is\n\n\nChamber pressure\nP_ch\nVacuum level driving sublimation\n\n\nCondenser temperature\nT_cond\nCold trap efficiency\n\n\nVacuum pump load\npump_load\nMechanical load on the vacuum system\n\n\n\n Each batch is a dataframe of timestamped readings.\nPrimary drying is the focus (where equipment monitoring matters most).\n\n\n\n\n\n\n\nPhase / signal\nStatus\n\n\n\n\nPrimary drying\nBenchmarked against LyoPRONTO: sublimation flux in close agreement\n\n\nFreezing\nSimulated, not benchmarked\n\n\nSecondary drying\nOut of scope: requires product-specific parameters not available from open data\n\n\nEquipment signals\nPhenomenological: plausible shapes, not benchmarked against real historian data"
+  },
+  {
+    "objectID": "toolbox/fdsim.html#controlled-failures",
+    "href": "toolbox/fdsim.html#controlled-failures",
+    "title": "FDSim",
+    "section": "Controlled failures",
+    "text": "Controlled failures\nThree failure modes can be injected at the parameter level.\n\n\n\n\n\n\n\n\n\nFault\nSignal\nProfile (50 batches)\nWhat to look for\n\n\n\n\nIsolated\nP_ch\n▂▂▂▂▂█▂▂▂▂\nSingle spike, R1\n\n\nDrift\npump_load\n▂▂▃▃▄▅▆▇█\nSlow rise, R5\n\n\n2 failures\npump_load + P_ch\n▂▂▃▄▅▆▇ + ▂▂▂▃▄▅▆\nTwo signals drifting together"
+  },
+  {
+    "objectID": "toolbox/fdsim.html#almost-a-digital-twin",
+    "href": "toolbox/fdsim.html#almost-a-digital-twin",
+    "title": "FDSim",
+    "section": "Almost a digital twin",
+    "text": "Almost a digital twin\nFDSim is a generic model: the physics are fixed, the parameters are not.\ncalibrate() is the bridge: given real historian data, this function is designed to estimate the missing equipment-specific and product-specific parameters, and return a calibrated parameter set.\nThe rest of the chain (batch simulation, CPV charts, fault detection) remains unchanged.\nWhen real data are available, the generic model becomes a digital twin."
+  },
+  {
+    "objectID": "ecosystem.html",
+    "href": "ecosystem.html",
+    "title": "The Ecosystem",
+    "section": "",
+    "text": "A packaging line, a fed-batch bioreactor, a pharmaceutical freeze-dryer, etc.\nThe freeze-dryer, for instance. The pump load was drifting from batch 17 . The deviation hit at batch 50 .\nBut the signal was there the whole time…"
+  },
+  {
+    "objectID": "ecosystem.html#different-machines-same-story",
+    "href": "ecosystem.html#different-machines-same-story",
+    "title": "The Ecosystem",
+    "section": "",
+    "text": "A packaging line, a fed-batch bioreactor, a pharmaceutical freeze-dryer, etc.\nThe freeze-dryer, for instance. The pump load was drifting from batch 17 . The deviation hit at batch 50 .\nBut the signal was there the whole time…"
+  },
+  {
+    "objectID": "ecosystem.html#two-types-of-signals",
+    "href": "ecosystem.html#two-types-of-signals",
+    "title": "The Ecosystem",
+    "section": "Two types of signals",
+    "text": "Two types of signals\nDiscrete events – alarms on/off, valve open/closed, operator entries…, timestamped.\nThis is what audit trails are made of. That’s what machinelogR reads.\nContinuous measurements – temperature, pressure, weight… over time.\nThis is typically what historians store. That’s what processlogR will handle.\nDifferent data. Same logic. Two sister packages."
+  },
+  {
+    "objectID": "ecosystem.html#architecture",
+    "href": "ecosystem.html#architecture",
+    "title": "The Ecosystem",
+    "section": "Architecture",
+    "text": "Architecture\n\nA few examples of functions:\nalarm_pareto() counts alarm frequencies.\nspc_chart() plots a control chart.\nlyo_batch() simulates a freeze-drying batch.\nA function, a simulator, and a grammar rule are all bricks.\nBricks snap together into walls. Walls build houses – a CPV report, a maintenance dashboard, an audit trail review.\n\n →  → \nThe same brick, like spc_chart(), may appear in different houses.\nThe context changes. The function does not.\n\n\n\n\n\ngraph TD\n    D1[\"&lt;b&gt;Discrete events&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarms, states, entries...&lt;/small&gt;\"] --&gt; M1[\"&lt;b&gt;machinelogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;alarm_pareto(), spc_chart(), connect_fmea_to_log()...&lt;/small&gt;\"]\n    D2[\"&lt;b&gt;Continuous measurements&lt;/b&gt;&lt;br/&gt;&lt;small&gt;temperature, pressure, load...&lt;/small&gt;\"] --&gt; M2[\"&lt;b&gt;processlogR&lt;/b&gt;&lt;br/&gt;&lt;small&gt;lyo_batch()...&lt;/small&gt;\"]\n\n    M1 --&gt; P1[\"Part I -- &lt;b&gt;Pharma & GxP&lt;/b&gt;&lt;br/&gt;&lt;small&gt;CPV · audit trail · FMEA · ...&lt;/small&gt;\"]\n    M1 --&gt; P2[\"Part II -- &lt;b&gt;Operations & I4.0&lt;/b&gt;&lt;br/&gt;&lt;small&gt;OEE analysis · predictive maintenance · ...&lt;/small&gt;\"]\n    M2 --&gt; P1\n    M2 --&gt; P2"
+  },
+  {
+    "objectID": "ecosystem.html#the-datasets",
+    "href": "ecosystem.html#the-datasets",
+    "title": "The Ecosystem",
+    "section": "The datasets",
+    "text": "The datasets\nAll datasets used here are either open data or generated on this site.\nPIADE (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on Kaggle. That’s what I used to build and test machinelogR on actual industrial data.\nFDSim is a freeze-dryer simulator I built for this site. You can see it in the Toolbox: the deviation at batch 50, the pump signal at batch 17.\nIndPenSim (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (industrialpenicillinsimulation.com). I use it to build and validate processlogR, and as a showcase for continuous bioprocess data.\nReal data from real plants exists. It won’t appear here – but the tools are built to read it."
+  },
+  {
+    "objectID": "chapters/index.html",
+    "href": "chapters/index.html",
+    "title": "Part I – Pharma & GxP",
+    "section": "",
+    "text": "This part is in preparation.\nTopics planned: CPV and equipment monitoring, audit trail analytics, FMEA-driven signal selection, freeze-dryer case study."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "Reading the Machine",
+    "section": "",
+    "text": "Industrial pharmacist · Postgraduate degree in Bioprocess Engineering.\n25+ years of practice in pharmaceutical manufacturing,\nand a long habit of building  tools for whatever the data required.\n\n LinkedIn    GitHub    R language"
+  },
+  {
+    "objectID": "about.html#arnaud-coqueblin",
+    "href": "about.html#arnaud-coqueblin",
+    "title": "Reading the Machine",
+    "section": "",
+    "text": "Industrial pharmacist · Postgraduate degree in Bioprocess Engineering.\n25+ years of practice in pharmaceutical manufacturing,\nand a long habit of building  tools for whatever the data required.\n\n LinkedIn    GitHub    R language"
+  },
+  {
+    "objectID": "coming-soon.html",
+    "href": "coming-soon.html",
+    "title": "Part II – Operations & I4.0",
+    "section": "",
+    "text": "This part is in preparation.\nTopics planned: OEE and energy analytics, alarm rationalization, predictive maintenance, Industry 5.0 human-centric monitoring."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "\nThe companion site toThe Unread Factory\n",
+    "section": "",
+    "text": "Reading the Machine\n\n\nThe companion site toThe Unread Factory\n\n\nProcess data has piled up for years.Time to make it speak. \n\nExplore the Toolbox →\n\n\n\n\nThe Unread Factory is a LinkedIn series about treating process data like evidence. \n\n\nThis site is where the methodology lives.\n\n\nThe Toolbox is the starting point.\n\n\nPart I (Pharma & GxP) and Part II (Operations & I4.0) will show it applied – both on their way.\n\n\nFor the full picture, see The Ecosystem.\n\n\n\n\n\n\n\n\nflowchart TD\n    L1[\"PLC\"]\n    L2[\"SCADA/HMI\"]\n    L3[\"Piloting layer\"]\n    L4[\"Historian\"]\n    L5[\"MES\"]\n    L6[\"Analytics\"]\n\n    L1 --&gt; L2\n    L2 --&gt; L4\n    L2 &lt;--&gt; L3\n    L4 --&gt; L6\n    L3 --&gt; L5\n    L5 --&gt; L6\n\n\n\n\n\n\n\n\n\n\nEach chapter is made with  code, on public datasets and open simulators."
+  },
+  {
+    "objectID": "toolbox/index.html",
+    "href": "toolbox/index.html",
+    "title": "Toolbox",
+    "section": "",
+    "text": "Methods are documented here as standalone references.\n\n\n\n\n\n\n\n\n\nmachinelogR\n\n\nA grammar for machine log analytics.\n\n\n\n\n\n\n\n\n\n\n\n\n\nFDSim\n\n\nA freeze-dryer simulator in \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
   }
 ]

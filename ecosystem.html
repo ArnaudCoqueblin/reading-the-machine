@@ -198,10 +198,11 @@ This is typically what historians store. That’s what <strong>processlogR</stro
 <p><code>alarm_pareto()</code> counts alarm frequencies.<br>
 <code>spc_chart()</code> plots a control chart.<br>
 <code>lyo_batch()</code> simulates a freeze-drying batch.</p>
-<p>A function, a simulator, and a <a href="toolbox/machinelogr.html">grammar rule</a> are all bricks.<br>
-Bricks connect into pipelines. And pipelines assemble to produce reports.<br>
-<iconify-icon role="img" inline="" icon="lucide:toy-brick" aria-label="Icon toy-brick from lucide Iconify.design set." title="Icon toy-brick from lucide Iconify.design set."></iconify-icon> → <iconify-icon role="img" inline="" icon="lucide:toy-brick" aria-label="Icon toy-brick from lucide Iconify.design set." title="Icon toy-brick from lucide Iconify.design set."></iconify-icon><iconify-icon role="img" inline="" icon="lucide:toy-brick" aria-label="Icon toy-brick from lucide Iconify.design set." title="Icon toy-brick from lucide Iconify.design set."></iconify-icon><iconify-icon role="img" inline="" icon="lucide:toy-brick" aria-label="Icon toy-brick from lucide Iconify.design set." title="Icon toy-brick from lucide Iconify.design set."></iconify-icon> → <iconify-icon role="img" inline="" icon="boxicons:file-report" aria-label="Icon file-report from boxicons Iconify.design set." title="Icon file-report from boxicons Iconify.design set."></iconify-icon></p>
-<p>The same brick, like <code>spc_chart()</code>, may show up in a CPV report or in a maintenance dashboard.<br>
+<p>A function, a simulator, and a <a href="toolbox/machinelogr.html">grammar rule</a> are all <strong>bricks</strong>.<br>
+Bricks snap together into <strong>walls</strong>. Walls build <strong>houses</strong> – a CPV report, a maintenance dashboard, an audit trail review.<br>
+</p>
+<p><iconify-icon role="img" inline="" icon="lucide:toy-brick" aria-label="Icon toy-brick from lucide Iconify.design set." title="Icon toy-brick from lucide Iconify.design set."></iconify-icon> → <iconify-icon role="img" inline="" icon="lucide:brick-wall" aria-label="Icon brick-wall from lucide Iconify.design set." title="Icon brick-wall from lucide Iconify.design set."></iconify-icon> → <iconify-icon role="img" inline="" icon="lucide:house" aria-label="Icon house from lucide Iconify.design set." title="Icon house from lucide Iconify.design set."></iconify-icon></p>
+<p>The same brick, like <code>spc_chart()</code>, may appear in different houses.<br>
 The context changes. The function does not.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -227,9 +228,9 @@ The context changes. The function does not.</p>
 <section id="the-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="the-datasets">The datasets</h2>
 <p>All datasets used here are either open data or generated on this site.</p>
-<p><strong>PIADE</strong> (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on <a href="https://www.kaggle.com/datasets/orvile/packaging-industry-anomaly-detection-dataset">Kaggle</a>. That’s what I used to build and test machinelogR on actual industrial data.</p>
+<p><strong>PIADE</strong> (Packaging Industry Anomaly DEtection) is a real dataset – packaging line logs published as open data on <a href="https://www.kaggle.com/datasets/orvile/packaging-industry-anomaly-detection-dataset">Kaggle</a>. That’s what I used to build and test <strong>machinelogR</strong> on actual industrial data.</p>
 <p><strong>FDSim</strong> is a freeze-dryer simulator I built for this site. You can see it in the <a href="toolbox/fdsim.html">Toolbox</a>: the deviation at batch 50, the pump signal at batch 17.</p>
-<p><strong>IndPenSim</strong> (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (<a href="http://www.industrialpenicillinsimulation.com/">industrialpenicillinsimulation.com</a>). I use it to build and validate processlogR, and as a showcase for continuous bioprocess data.</p>
+<p><strong>IndPenSim</strong> (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors (<a href="http://www.industrialpenicillinsimulation.com/">industrialpenicillinsimulation.com</a>). I use it to build and validate <strong>processlogR</strong>, and as a showcase for continuous bioprocess data.</p>
 <p>Real data from real plants exists. It won’t appear here – but the tools are built to read it.</p>
 
 

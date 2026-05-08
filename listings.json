@@ -3,7 +3,6 @@
     "listing": "/toolbox/index.html",
     "items": [
       "/toolbox/machinelogr.html",
-      "/toolbox/spc-nelson.html",
       "/toolbox/fdsim.html"
     ]
   }

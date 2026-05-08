@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-05-04">
+<meta name="dcterms.date" content="2026-05-08">
 
-<title>SPC and Nelson rules for inter-batch monitoring – Reading the Machine</title>
+<title>Batch-to-batch SPC with Nelson rules – Reading the Machine</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -176,14 +176,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-core-idea" id="toc-the-core-idea" class="nav-link active" data-scroll-target="#the-core-idea">The core idea</a></li>
-  <li><a href="#phase-i-establishing-the-baseline" id="toc-phase-i-establishing-the-baseline" class="nav-link" data-scroll-target="#phase-i-establishing-the-baseline">Phase I – establishing the baseline</a></li>
-  <li><a href="#phase-ii-monitoring-with-nelson-rules" id="toc-phase-ii-monitoring-with-nelson-rules" class="nav-link" data-scroll-target="#phase-ii-monitoring-with-nelson-rules">Phase II – monitoring with Nelson rules</a>
-  <ul class="collapse">
-  <li><a href="#the-eight-rules" id="toc-the-eight-rules" class="nav-link" data-scroll-target="#the-eight-rules">The eight rules</a></li>
-  <li><a href="#selecting-rules-for-a-signal" id="toc-selecting-rules-for-a-signal" class="nav-link" data-scroll-target="#selecting-rules-for-a-signal">Selecting rules for a signal</a></li>
-  </ul></li>
-  <li><a href="#machinelogr-spc_chart" id="toc-machinelogr-spc_chart" class="nav-link" data-scroll-target="#machinelogr-spc_chart">machinelogR – spc_chart()</a></li>
+  <li><a href="#spc_baseline-phase-i" id="toc-spc_baseline-phase-i" class="nav-link active" data-scroll-target="#spc_baseline-phase-i">spc_baseline() – Phase I</a></li>
+  <li><a href="#spc_chart-phase-ii" id="toc-spc_chart-phase-ii" class="nav-link" data-scroll-target="#spc_chart-phase-ii">spc_chart() – Phase II</a></li>
+  <li><a href="#which-rules-to-apply" id="toc-which-rules-to-apply" class="nav-link" data-scroll-target="#which-rules-to-apply">Which rules to apply</a></li>
   <li><a href="#in-practice" id="toc-in-practice" class="nav-link" data-scroll-target="#in-practice">In practice</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/arnaudcoqueblin/reading-the-machine/edit/main/toolbox/spc-nelson.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/arnaudcoqueblin/reading-the-machine/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -193,8 +188,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">SPC and Nelson rules for inter-batch monitoring</h1>
-<p class="subtitle lead">Phase I baseline, frozen limits, eight detection rules.</p>
+<h1 class="title">Batch-to-batch SPC with Nelson rules</h1>
+<p class="subtitle lead">spc_baseline() and spc_chart() – from raw data to violations.</p>
   <div class="quarto-categories">
     <div class="quarto-category">spc</div>
     <div class="quarto-category">methods</div>
@@ -209,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 4, 2026</p>
+      <p class="date">May 8, 2026</p>
     </div>
   </div>
   
@@ -221,176 +216,86 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Statistical process control applied to inter-batch data is not the same thing as real-time SPC on a production line. The rhythm is different, the signal is different, and the failure mode you are trying to catch is different.</p>
-<p>This page describes the Phase I / Phase II framework as used in this site, and the eight Nelson rules as implemented in <code>machinelogR</code>.</p>
+<p>Phase I / Phase II SPC applied to batch summaries. The theory is in Montgomery (<em>Introduction to Statistical Quality Control</em>, Ch. 5). This page covers the implementation in <strong>machinelogR</strong>.</p>
 <hr>
-<section id="the-core-idea" class="level2">
-<h2 class="anchored" data-anchor-id="the-core-idea">The core idea</h2>
-<p>A control chart answers one question: is this batch consistent with the reference population?</p>
-<p>To answer it, you need two things. A reference population (Phase I). And a set of rules that define “inconsistent” (Nelson, or Western Electric).</p>
-<p>The order matters. Limits are computed once, on data you believe is stable. Then they are frozen. Everything that follows is compared against those fixed limits.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Why freeze the limits?
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>A chart that recalculates its limits as new data arrives cannot detect a gradual drift: the limits drift with the process and the signal disappears. Phase I limits are established on a stable reference population and held fixed. This is the central principle of Phase I / Phase II SPC.</p>
-<p><em>Introduction to Statistical Quality Control</em>, Montgomery, 8th ed., Ch. 5.</p>
-</div>
-</div>
-<hr>
-</section>
-<section id="phase-i-establishing-the-baseline" class="level2">
-<h2 class="anchored" data-anchor-id="phase-i-establishing-the-baseline">Phase I – establishing the baseline</h2>
-<p>Phase I is not a burn-in period. It is a deliberate selection of batches that represent what “stable and controlled” looks like for this process.</p>
-<p>The output is a set of control limits: center line (CL), upper control limit (UCL), and lower control limit (LCL), computed as CL +/- 3 standard deviations of the Phase I data.</p>
+<section id="spc_baseline-phase-i" class="level2">
+<h2 class="anchored" data-anchor-id="spc_baseline-phase-i">spc_baseline() – Phase I</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>bl_pump <span class="ot">&lt;-</span> <span class="fu">spc_baseline</span>(phase1_data, <span class="at">variable =</span> <span class="st">"pump_load"</span>, <span class="at">time_col =</span> <span class="st">"batch_date"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>spc_baseline()</code> returns a list with <code>CL</code>, <code>UCL</code>, <code>LCL</code>, and <code>sigma</code> – the frozen reference. It is computed once and passed explicitly to Phase II.</p>
+<p>Computes the center line and control limits from a reference population. Returns a frozen baseline object: <code>CL</code>, <code>UCL</code>, <code>LCL</code>, <code>sigma</code>. Computed once. Passed explicitly to Phase II.</p>
 <p>Three decisions go into Phase I:</p>
-<p><strong>Which batches.</strong> They must represent normal operation. Batches with known anomalies, equipment changes, or formulation adjustments should be excluded. The number is a balance between statistical stability (more is better) and practical availability (you may only have ten validated batches at launch). Fifteen is a reasonable minimum for inter-batch SPC.</p>
-<p><strong>Which variable.</strong> A summary statistic per batch, not a time series. Mean, maximum, standard deviation – the choice depends on what the signal is supposed to capture. Maximum product temperature for collapse risk. Mean pump load for gradual mechanical wear. The choice is made before running the chart, not after.</p>
-<p><strong>When to re-baseline.</strong> Never without justification. A validated change (equipment replacement, formulation update, process improvement) is a valid trigger. Data drift is not: if the process is drifting, re-baselining hides it.</p>
+<p><strong>Which batches.</strong> Batches that represent normal operation. Exclude known anomalies, equipment changes, formulation adjustments.</p>
+<p><strong>Which variable.</strong> A summary statistic per batch – mean, maximum, standard deviation. Mean pump load for gradual mechanical wear. Maximum product temperature for collapse risk. The choice is made before running the chart, not after.</p>
+<p><strong>When to re-baseline.</strong> On a validated change (equipment replacement, process improvement). Not on data drift – re-baselining on drift hides the signal.</p>
 <hr>
 </section>
-<section id="phase-ii-monitoring-with-nelson-rules" class="level2">
-<h2 class="anchored" data-anchor-id="phase-ii-monitoring-with-nelson-rules">Phase II – monitoring with Nelson rules</h2>
-<p>Phase II applies the frozen limits to each incoming batch and evaluates it against a set of pattern rules.</p>
-<p>Nelson rules were formalized by Lloyd S. Nelson in <em>Journal of Quality Technology</em> (1984, Vol. 16, No.&nbsp;4) as an extension of the original Western Electric Statistical Quality Control Handbook (1956). Montgomery summarizes them in <em>Introduction to Statistical Quality Control</em> (Ch. 5).</p>
-<section id="the-eight-rules" class="level3">
-<h3 class="anchored" data-anchor-id="the-eight-rules">The eight rules</h3>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Rule</th>
-<th>Condition</th>
-<th>Signal detected</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>R1</td>
-<td>1 point beyond +/-3sigma</td>
-<td>Acute anomaly</td>
-</tr>
-<tr class="even">
-<td>R2</td>
-<td>9+ consecutive points on the same side of CL</td>
-<td>Persistent bias</td>
-</tr>
-<tr class="odd">
-<td>R3</td>
-<td>6+ consecutive points strictly monotone</td>
-<td>Trend</td>
-</tr>
-<tr class="even">
-<td>R4</td>
-<td>14+ consecutive points alternating up/down</td>
-<td>Systematic oscillation</td>
-</tr>
-<tr class="odd">
-<td>R5</td>
-<td>2 out of 3 consecutive points beyond +/-2sigma (same side)</td>
-<td>Slow drift</td>
-</tr>
-<tr class="even">
-<td>R6</td>
-<td>4 out of 5 consecutive points beyond +/-1sigma (same side)</td>
-<td>Moderate drift</td>
-</tr>
-<tr class="odd">
-<td>R7</td>
-<td>15+ consecutive points within +/-1sigma</td>
-<td>Variance collapse (hugging)</td>
-</tr>
-<tr class="even">
-<td>R8</td>
-<td>8+ consecutive points outside +/-1sigma (both sides)</td>
-<td>Bimodality</td>
-</tr>
-</tbody>
-</table>
-<p>The “signal detected” column is not in the original Nelson paper – it is a translation of the statistical condition into the process phenomenon each rule is designed to catch. R1 catches abrupt jumps. R5 and R6 catch gradual drifts that would never breach R1. R7 catches a suspicious reduction in variability, which can indicate a stuck sensor, a batch population that has narrowed artificially, or a process that has lost its natural variation.</p>
-<p>Rules are not interchangeable. The choice of which rules to apply depends on the degradation mode you are monitoring for.</p>
+<section id="spc_chart-phase-ii" class="level2">
+<h2 class="anchored" data-anchor-id="spc_chart-phase-ii">spc_chart() – Phase II</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>chart <span class="ot">&lt;-</span> <span class="fu">spc_chart</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data     =</span> metrics,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="st">"pump_load"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_col =</span> <span class="st">"batch_date"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">rules    =</span> <span class="dv">5</span>L,       <span class="co"># Nelson R5</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">cl_from  =</span> bl_pump   <span class="co"># Phase I baseline (frozen)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>cl_from</code> takes the object returned by <code>spc_baseline()</code>. Passing the same data to both <code>data</code> and <code>cl_from</code> defeats the purpose – the separation is structural.</p>
+<p><code>rules</code> accepts a scalar or vector of integers (1 to 8). All eight Nelson rules are implemented.</p>
+<p>Return value:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>violations      <span class="co"># tibble: date, index, rule fired</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>control_limits  <span class="co"># list: CL, UCL, LCL, sigma</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>n_violations    <span class="co"># integer</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>plot            <span class="co"># patchwork: I-chart + MR chart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
 </section>
-<section id="selecting-rules-for-a-signal" class="level3">
-<h3 class="anchored" data-anchor-id="selecting-rules-for-a-signal">Selecting rules for a signal</h3>
+<section id="which-rules-to-apply" class="level2">
+<h2 class="anchored" data-anchor-id="which-rules-to-apply">Which rules to apply</h2>
+<p>The <code>rules</code> argument translates directly to the degradation mode you are monitoring for.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Degradation mode</th>
-<th>Recommended rules</th>
-<th>Rationale</th>
+<th><code>rules</code></th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Abrupt failure</td>
-<td>R1</td>
+<td><code>1L</code></td>
 <td>Single point breach is sufficient</td>
 </tr>
 <tr class="even">
-<td>Gradual mechanical wear</td>
-<td>R5, R6</td>
-<td>Slow drift, never reaches 3sigma</td>
+<td>Gradual wear</td>
+<td><code>c(5L, 6L)</code></td>
+<td>Slow drift, never reaches 3-sigma</td>
 </tr>
 <tr class="odd">
-<td>Process mean shift</td>
-<td>R1, R2</td>
+<td>Mean shift</td>
+<td><code>c(1L, 2L)</code></td>
 <td>Jump then persistence</td>
 </tr>
 <tr class="even">
 <td>Sensor drift</td>
-<td>R3, R5</td>
+<td><code>c(3L, 5L)</code></td>
 <td>Monotone or asymmetric drift</td>
 </tr>
 <tr class="odd">
-<td>Sensor failure (stuck)</td>
-<td>R7</td>
+<td>Sensor stuck</td>
+<td><code>7L</code></td>
 <td>Variance collapses</td>
 </tr>
 <tr class="even">
-<td>Mixed or unknown</td>
-<td>R1 + R5</td>
+<td>Mixed / unknown</td>
+<td><code>c(1L, 5L)</code></td>
 <td>Pragmatic minimum</td>
 </tr>
 </tbody>
 </table>
-<p>The pump load scenario in the equipment-drift detection chapter uses R5. A degrading pump shows a slow, asymmetric increase in load over dozens of batches that never reaches 3-sigma until the equipment is already well into its failure trajectory. R5 was designed for exactly this.</p>
-<hr>
-</section>
-</section>
-<section id="machinelogr-spc_chart" class="level2">
-<h2 class="anchored" data-anchor-id="machinelogr-spc_chart">machinelogR – spc_chart()</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>chart <span class="ot">&lt;-</span> <span class="fu">spc_chart</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data     =</span> metrics,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="st">"pump_load"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_col =</span> <span class="st">"batch_date"</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">rules    =</span> <span class="dv">5</span>L,          <span class="co"># Nelson R5</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">cl_from  =</span> bl_pump      <span class="co"># Phase I baseline (frozen)</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>spc_chart()</code> accepts a scalar or vector of rule numbers. <code>rules = c(1L, 5L)</code> applies both R1 and R5. All eight rules are implemented.</p>
-<p>The return value is a list:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>violations     <span class="co"># tibble: date, index, rule fired</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>control_limits <span class="co"># list: CL, UCL, LCL, sigma</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>n_violations   <span class="co"># integer</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>chart<span class="sc">$</span>plot           <span class="co"># patchwork: I-chart + MR chart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The separation between <code>cl_from</code> (Phase I baseline) and <code>data</code> (Phase II input) is structural, not optional. Passing the same data to both would defeat the purpose.</p>
 <hr>
 </section>
 <section id="in-practice" class="level2">
 <h2 class="anchored" data-anchor-id="in-practice">In practice</h2>
-<p>The full three-layer monitoring example – pump load, chamber pressure, product temperature, across 50 simulated batches – is in:</p>
-<p><a href="../chapters/equipment-drift-detection.qmd">Detecting equipment drift before the deviation</a></p>
+<p>The pump load scenario from <a href="fdsim.html">FDSim</a>: drift injected at batch 17, deviation at batch 50. A slow, asymmetric increase that never reaches 3-sigma until the equipment is well into its failure trajectory. That is what R5 is for.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rules <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>L, <span class="dv">5</span>L)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>
@@ -506,7 +411,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/ArnaudCoqueblin\.github\.io\/reading-the-machine\/");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }

@@ -1,0 +1,91 @@
+---
+title: "Batch-to-batch SPC with Nelson rules"
+subtitle: "spc_baseline() and spc_chart() -- from raw data to violations."
+date: 2026-05-08
+order: 2
+categories: [spc, methods]
+code-tools: false
+---
+
+Phase I / Phase II SPC applied to batch summaries.
+The theory is in Montgomery (*Introduction to Statistical Quality Control*, Ch. 5).
+This page covers the implementation in **machinelogR**.
+
+---
+
+## spc_baseline() -- Phase I
+
+```r
+bl_pump <- spc_baseline(phase1_data, variable = "pump_load", time_col = "batch_date")
+```
+
+Computes the center line and control limits from a reference population.
+Returns a frozen baseline object: `CL`, `UCL`, `LCL`, `sigma`.
+Computed once. Passed explicitly to Phase II.
+
+Three decisions go into Phase I:
+
+**Which batches.** Batches that represent normal operation.
+Exclude known anomalies, equipment changes, formulation adjustments.
+
+**Which variable.** A summary statistic per batch -- mean, maximum, standard deviation.
+Mean pump load for gradual mechanical wear. Maximum product temperature for collapse risk.
+The choice is made before running the chart, not after.
+
+**When to re-baseline.** On a validated change (equipment replacement, process improvement).
+Not on data drift -- re-baselining on drift hides the signal.
+
+---
+
+## spc_chart() -- Phase II
+
+```r
+chart <- spc_chart(
+  data     = metrics,
+  variable = "pump_load",
+  time_col = "batch_date",
+  rules    = 5L,       # Nelson R5
+  cl_from  = bl_pump   # Phase I baseline (frozen)
+)
+```
+
+`cl_from` takes the object returned by `spc_baseline()`.
+Passing the same data to both `data` and `cl_from` defeats the purpose -- the separation is structural.
+
+`rules` accepts a scalar or vector of integers (1 to 8). All eight Nelson rules are implemented.
+
+Return value:
+
+```r
+chart$violations      # tibble: date, index, rule fired
+chart$control_limits  # list: CL, UCL, LCL, sigma
+chart$n_violations    # integer
+chart$plot            # patchwork: I-chart + MR chart
+```
+
+---
+
+## Which rules to apply
+
+The `rules` argument translates directly to the degradation mode you are monitoring for.
+
+| Degradation mode | `rules` | Why |
+|---|---|---|
+| Abrupt failure | `1L` | Single point breach is sufficient |
+| Gradual wear | `c(5L, 6L)` | Slow drift, never reaches 3-sigma |
+| Mean shift | `c(1L, 2L)` | Jump then persistence |
+| Sensor drift | `c(3L, 5L)` | Monotone or asymmetric drift |
+| Sensor stuck | `7L` | Variance collapses |
+| Mixed / unknown | `c(1L, 5L)` | Pragmatic minimum |
+
+---
+
+## In practice
+
+The pump load scenario from [FDSim](fdsim.html): drift injected at batch 17, deviation at batch 50.
+A slow, asymmetric increase that never reaches 3-sigma until the equipment is well into its failure trajectory.
+That is what R5 is for.
+
+```r
+rules = c(1L, 5L)
+```
