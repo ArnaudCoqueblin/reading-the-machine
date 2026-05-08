@@ -1,0 +1,21 @@
+---
+title: ""
+subtitle: "Who built this."
+repo-actions: false
+code-tools: false
+toc: false
+---
+
+## Arnaud Coqueblin
+
+Industrial pharmacist · Postgraduate degree in Bioprocess Engineering.\
+25+ years of practice in pharmaceutical manufacturing,\
+and a long habit of building {{< iconify skill-icons r-light size=1.2em >}} tools for whatever the data required.
+
+---
+
+{{< iconify mdi:linkedin >}} [LinkedIn](https://www.linkedin.com/in/arnaudcoqueblin/)
+&nbsp;
+{{< iconify mdi:github >}} [GitHub](https://github.com/arnaudcoqueblin)
+&nbsp;
+{{< iconify simple-icons:r >}} [R language](https://www.r-project.org)

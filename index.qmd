@@ -1,0 +1,48 @@
+---
+sidebar: false
+toc: false
+code-tools: false
+repo-actions: false
+---
+
+<div class="hero-split">
+<div class="hero-left">
+<p class="hero-label">Reading the Machine</p>
+<h1>The companion site to<br><span class="series-name">The Unread Factory</span></h1>
+<p>Process data has piled up for years.<br>Time to make it speak. {{< iconify fxemoji:loudspeaker >}}</p>
+<a href="toolbox/index.html" class="hero-cta">Explore the Toolbox &rarr;</a>
+</div>
+<div class="hero-right">
+<div class="hero-text">
+<p><em>The Unread Factory</em> is a LinkedIn series about treating process data like evidence. {{< iconify noto magnifying-glass-tilted-left >}}</p>
+<p>This site is where the methodology lives.</p>
+<p>The Toolbox is the starting point.</p>
+<p><i>Part I (Pharma & GxP) and Part II (Operations & I4.0/I5.0) will show it applied -- both on their way.</i></p>
+<p>For the full picture, see <a href="ecosystem.html">The Ecosystem</a>.</p>
+</div>
+<div class="hero-diagram">
+
+```{mermaid}
+flowchart TD
+    L1["PLC"]
+    L2["SCADA/HMI"]
+    L3["Piloting layer"]
+    L4["Historian"]
+    L5["MES"]
+    L6["Analytics"]
+
+    L1 --> L2
+    L2 --> L4
+    L2 <--> L3
+    L4 --> L6
+    L3 --> L5
+    L5 --> L6
+```
+
+</div>
+</div>
+</div>
+
+---
+
+Each chapter is made with {{< iconify skill-icons r-light size=1.5em >}} code, on public datasets and open simulators.

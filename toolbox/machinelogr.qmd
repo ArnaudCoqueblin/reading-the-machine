@@ -1,0 +1,135 @@
+---
+title: "machinelogR"
+subtitle: "A grammar for machine log analytics."
+date: 2026-05-08
+order: 1
+categories: [package, architecture]
+code-tools: false
+---
+
+**machinelogR** turns any machine log into a standard event table. One format. One vocabulary. Every analysis on this site runs on it.
+
+------------------------------------------------------------------------
+
+## The Lego principle
+
+**machinelogR** is built like Lego.
+
+::: {style="float: right; margin: 0 0 1em 1.5em; width: 180px;"}
+![](../images/lego_bricks.jpg)
+:::
+
+{{< iconify lucide:toy-brick >}}\
+**A brick is a function.** It does one thing: takes a standard input and returns a standard output.
+
+```{mermaid}
+flowchart LR
+    A(["input"]) --> B["function()"]
+    B --> C(["result"])
+```
+
+{{< iconify lucide:brick-wall >}}\
+Bricks snap together into **walls**. A wall is a group of functions with a shared purpose.\
+Each step adds one layer of meaning. No step knows about the others. They just snap.
+
+{{< iconify lucide:house >}}\
+Walls can build **houses**. A house is a report: a CPV monitoring report, a maintenance prioritization dashboard, an audit trail review, etc.
+
+And finally, houses form **cities**. There are two cities on this site:
+
+{{< iconify mdi:hospital-building >}} **Part I**: a pharmaceutical manufacturing site.
+
+{{< iconify streamline-plump:factory-plant >}} **Part II**: an industrial production line.
+
+
+------------------------------------------------------------------------
+
+## The pipeline
+
+Every analysis follows the same path: raw data in, conclusions out.
+
+```{mermaid}
+flowchart TB
+    subgraph etl["<img src='https://api.iconify.design/lucide:brick-wall.svg' width='14' height='14'/> Ingestion"]
+        direction LR
+        R[("raw export")] --> E["read_piade()"]
+        E --> M["mlog()"]
+        M --> L[("event log")]
+    end
+    subgraph ctrl["<img src='https://api.iconify.design/lucide:brick-wall.svg' width='14' height='14'/> Control chart"]
+        direction LR
+        B["spc_baseline()"] --> C["spc_chart()"]
+    end
+    etl --> B
+    C --> P1(["<img src='https://api.iconify.design/mdi:hospital-building.svg' width='14' height='14'/> CPV report<br/>Part I"])
+    C --> P2(["<img src='https://api.iconify.design/streamline-plump:factory-plant.svg' width='14' height='14'/> Maintenance dashboard<br/>Part II"])
+    style etl fill:#f5f7fa,stroke:#b0bec5,color:#333
+    style ctrl fill:#f5f7fa,stroke:#b0bec5,color:#333
+```
+
+Same bricks. Same walls. Two different cities.
+
+
+### mlog(): the contract
+
+Every city needs a shared language.\
+In **machinelogR**, that language is `mlog()`.
+
+The raw data first goes through an ingestion step: an adapter function, specific to the data source (ex: Siemens PLC) that handles timestamps, column names, and encoding.\
+Then `mlog()` applies the contract. For example:
+
+``` r
+df <- mlog(raw_export,
+           ts_col  = "timestamp", dir_col = "direction",
+           on_val  = "ON", off_val = "OFF")
+```
+
+So, the output always has the same structure:
+
+```         
+equipment_ID | type         | alarm | start (POSIXct) | end (POSIXct) | elapsed_s
+-------------|--------------|-------|-----------------|---------------|----------
+s_1          | production   |  -    | 2021-01-04 ...  | ...           | 3600
+s_1          | downtime     | E042  | 2021-01-04 ...  | ...           | 245
+```
+
+*type* is a controlled vocabulary: "production", "downtime", "performance_loss", "idle", "scheduled_downtime".\
+These five terms map directly to the OEE decomposition: the minimal set to compute Availability and Performance from any machine, regardless of how its native export labels the states.
+
+The source equipment does not matter.\
+The column names of the raw file do not matter.\
+Once in this format, every downstream function works on it.
+
+------------------------------------------------------------------------
+
+## ask()
+
+A natural language interface sits on top of the modules.\
+A plain-text question. A structured answer. No knowledge of the underlying functions required.\
+And it speaks English and French.
+
+``` r
+ask(df, "which alarms caused the most downtime last month?")
+ask(df, "show me the escalation pattern starting from E042")
+```
+
+`ask()` runs locally . No cloud.\
+And in a GxP context, every query and response could be logged automatically.\
+This is still a prototype, but it works.
+
+------------------------------------------------------------------------
+
+## Two packages, not one
+
+**machinelogR** handles **discrete** signals: alarms, intervals, event counts, state transitions.
+
+A companion package, **processlogR** (in development), handles **continuous** signals: temperature curves, pressure profiles, sublimation rates.
+
+Two grammars. Two packages. One shared design philosophy.
+
+------------------------------------------------------------------------
+
+## Access
+
+I built **machinelogR** for my own analytical work.\
+It is not on CRAN and not publicly hosted, but I'm happy to share the philosophy.

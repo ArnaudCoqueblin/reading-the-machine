@@ -1,0 +1,10 @@
+---
+title: "Part I -- Pharma & GxP"
+subtitle: "Coming soon."
+code-tools: false
+repo-actions: false
+---
+
+This part is in preparation.
+
+Topics planned: CPV and equipment monitoring, audit trail analytics, FMEA-driven signal selection, freeze-dryer case study.

@@ -1,0 +1,71 @@
+---
+repo-actions: false
+code-tools: false
+title: "The Ecosystem"
+subtitle: "How the pieces fit together -- and why they were built this way."
+---
+
+## Different machines -- Same story
+
+A packaging line, a fed-batch bioreactor, a pharmaceutical freeze-dryer, etc.
+
+The freeze-dryer, for instance. The pump load was drifting from batch 17 {{< iconify picon:rise >}}. The deviation hit at batch 50 {{<iconify si:bin-fill>}}.\
+But the signal was there the whole time...
+
+---
+
+## Two types of signals
+
+**Discrete events** <small>-- alarms on/off, valve open/closed, operator entries..., timestamped.</small>\
+This is what audit trails are made of. That's what **machinelogR** reads.
+
+**Continuous measurements** <small>-- temperature, pressure, weight... over time.</small>\
+This is typically what historians store. That's what **processlogR** will handle.
+
+Different data. Same logic. Two sister packages.
+
+---
+
+## Architecture
+
+<img src="images/lego_bricks.jpg" style="float: right; margin-left: 1.5rem; margin-bottom: 1rem; width: 25%;" />
+
+A few examples of functions:
+
+`alarm_pareto()` counts alarm frequencies.\
+`spc_chart()` plots a control chart.\
+`lyo_batch()` simulates a freeze-drying batch.
+
+A function, a simulator, and a [grammar rule](toolbox/machinelogr.html) are all **bricks**.\
+Bricks snap together into **walls**. Walls build **houses** -- a CPV report, a maintenance dashboard, an audit trail review.\
+{{< iconify lucide:toy-brick >}} → {{< iconify lucide:brick-wall >}} → {{< iconify lucide:house >}}
+
+The same brick, like `spc_chart()`, may appear in different houses.\
+The context changes. The function does not.
+
+
+
+```{mermaid}
+graph TD
+    D1["<b>Discrete events</b><br/><small>alarms, states, entries...</small>"] --> M1["<b>machinelogR</b><br/><small>alarm_pareto(), spc_chart(), connect_fmea_to_log()...</small>"]
+    D2["<b>Continuous measurements</b><br/><small>temperature, pressure, load...</small>"] --> M2["<b>processlogR</b><br/><small>lyo_batch()...</small>"]
+
+    M1 --> P1["Part I -- <b>Pharma & GxP</b><br/><small>CPV · audit trail · FMEA · ...</small>"]
+    M1 --> P2["Part II -- <b>Operations & I4.0/I5.0</b><br/><small>OEE analysis · predictive maintenance · ...</small>"]
+    M2 --> P1
+    M2 --> P2
+```
+
+---
+
+## The datasets
+
+All datasets used here are either open data or generated on this site.
+
+**PIADE** (Packaging Industry Anomaly DEtection) is a real dataset -- packaging line logs published as open data on [Kaggle](https://www.kaggle.com/datasets/orvile/packaging-industry-anomaly-detection-dataset). That's what I used to build and test **machinelogR** on actual industrial data.
+
+**FDSim** is a freeze-dryer simulator I built for this site. You can explore it in the [Toolbox](toolbox/fdsim.html).
+
+**IndPenSim** (Industrial-scale Penicillin Simulation) is a public simulator for fed-batch bioreactors ([industrialpenicillinsimulation.com](http://www.industrialpenicillinsimulation.com/)). I use it to build and validate **processlogR**, and as a showcase for continuous bioprocess data.
+
+Real data from real plants exists. It won't appear here -- but the tools are built to read it.

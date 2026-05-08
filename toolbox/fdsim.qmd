@@ -1,0 +1,97 @@
+---
+title: "FDSim"
+subtitle: "A freeze-dryer simulator in {{< iconify simple-icons r >}}"
+date: 2026-05-08
+categories: [lyo, simulator]
+code-tools: false
+---
+
+## Why simulate ?
+
+I wanted real and challenging data to test the functions I had built.\
+A freeze-dryer was the obvious choice: one of the most complex pieces of equipment I have worked with,
+but also one where open data is unavailable.
+
+So I needed a simulator and I found one: [LyoPRONTO](https://lyopronto.geddes.rcac.purdue.edu/), a Lyophilization Process Optimization Tool.
+Excellent. But written in Python, and designed to optimize the cycle, not to monitor the equipment.
+
+I decided to build one, brick by brick. Not a small task.\
+Three things mattered:
+
+- **Reproducibility** : same inputs, same outputs, every time
+- **Controlled faults** : realistic failures, injected on demand
+- **Open** : nothing proprietary, nothing confidential
+
+|  | LyoPRONTO | FDSim |
+|---|---|---|
+| Purpose | Process optimization | Equipment monitoring |
+| Process physics (sublimation, heat transfer) | yes | yes |
+| Equipment signals (pump, condenser, ...) | no | yes |
+| Batch-to-batch variability | no | yes |
+
+## Physical basis
+
+```{mermaid}
+flowchart LR
+    classDef hot  fill:#fff3e0,stroke:#e65100,color:#333
+    classDef warm fill:#fffde7,stroke:#f9a825,color:#333
+    classDef cold fill:#e3f2fd,stroke:#1565c0,color:#333
+    classDef pump fill:#f5f5f5,stroke:#9e9e9e,color:#333
+
+    subgraph CH["<b>Chamber</b> · P_ch"]
+        A["<img src='https://api.iconify.design/lucide:flame.svg' width='32' height='32'/><br/><b>Shelf</b><br/>T_shelf"]:::hot -->|heats| B["<img src='https://api.iconify.design/lucide:flask-conical.svg' width='32' height='32'/><br/><b>Product</b><br/>T_product"]:::warm
+    end
+    subgraph TR["<b>Cold trap</b> · P_ch"]
+        D["<img src='https://api.iconify.design/lucide:snowflake.svg' width='32' height='32'/><br/><b>Condenser</b><br/>T_cond"]:::cold
+    end
+    B -->|water vapor| D
+    D -->|maintains vacuum| E["<img src='https://api.iconify.design/material-symbols:water-pump-outline.svg' width='32' height='32'/><br/><b>Pump</b><br/>pump_load"]:::pump
+    style CH fill:#f5f7fa,stroke:#b0bec5,color:#333
+    style TR fill:#f5f7fa,stroke:#b0bec5,color:#333
+```
+
+**Shelf to product** : heat flows through the vial bottom. This energy feeds sublimation.
+
+**Product to chamber** : ice sublimates into vapor, driven by the vacuum. The dried cake resists the flow as the lyophilization progresses.
+
+**Chamber to cold trap** : water vapor is captured by the condenser. The pump maintains the vacuum that keeps the whole process running.
+
+
+| Signal simulated | Variable | What it represents |
+|---|---|---|
+| Shelf temperature | `T_shelf` | Heat delivered to the product |
+| Product temperature | `T_product` | How cold the product still is |
+| Chamber pressure | `P_ch` | Vacuum level driving sublimation |
+| Condenser temperature | `T_cond` | Cold trap efficiency |
+| Vacuum pump load | `pump_load` | Mechanical load on the vacuum system |
+
+<br>
+Each batch is a dataframe of timestamped readings.\
+Primary drying is the focus (where equipment monitoring matters most).
+
+| Phase / signal | Status |
+|---|---|
+| Primary drying | Benchmarked against LyoPRONTO: sublimation flux in close agreement |
+| Freezing | Simulated, not benchmarked |
+| Secondary drying | Out of scope: requires product-specific parameters not available from open data |
+| Equipment signals | Phenomenological: plausible shapes, not benchmarked against real historian data |
+
+---
+
+## Controlled failures
+
+Three failure modes can be injected at the parameter level.
+
+| Fault | Signal | Profile (50 batches) | What to look for |
+|---|---|---|---|
+| Isolated | `P_ch` | `▂▂▂▂▂█▂▂▂▂` | Single spike, R1 |
+| Drift | `pump_load` | `▂▂▃▃▄▅▆▇█` | Slow rise, R5 |
+| 2 failures | `pump_load` + `P_ch` | `▂▂▃▄▅▆▇` + `▂▂▂▃▄▅▆` | Two signals drifting together |
+
+## Almost a digital twin
+
+FDSim is a generic model: the physics are fixed, the parameters are not.
+
+`calibrate()` is the bridge: given real historian data, this function is designed to estimate the missing equipment-specific and product-specific parameters, and return a calibrated parameter set.\
+The rest of the chain (batch simulation, CPV charts, fault detection) remains unchanged.
+

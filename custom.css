@@ -1,0 +1,277 @@
+/* Reading the Machine -- Lab theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Audiowide&display=swap');
+
+/* ── Variables ── */
+:root {
+  --rtm-primary:   #0f766e;
+  --rtm-accent:    #0891b2;
+  --rtm-gxp:       #166534;
+  --rtm-warn:      #b91c1c;
+  --rtm-bg:        #ffffff;
+  --rtm-bg-soft:   #f0fdf9;
+  --rtm-border:    #d1fae5;
+  --rtm-text:      #0f172a;
+  --rtm-text-soft: #475569;
+}
+
+/* ── Body ── */
+body {
+  background-color: var(--rtm-bg);
+  color: var(--rtm-text);
+}
+
+/* ── Headings ── */
+h1, h2, h3, h4 {
+  color: var(--rtm-primary);
+}
+
+/* Noms de projets en gras dans les listes -- accent bleu */
+li strong {
+  color: var(--rtm-accent);
+}
+
+/* Charte graphique -- classes semantiques */
+.gxp {
+  color: var(--rtm-gxp);
+  font-weight: 600;
+}
+.tech { color: #c2410c; font-weight: 600; }
+
+/* ── Links ── */
+a {
+  color: var(--rtm-accent);
+}
+a:hover {
+  color: var(--rtm-primary);
+}
+
+/* ── Navbar ── */
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.navbar-brand {
+  font-family: 'Audiowide', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-size: 1.35rem;
+}
+.navbar-brand img {
+  border-radius: 2px;
+}
+
+/* Tabs navbar -- cosmo par défaut */
+.navbar-nav .nav-link {
+  font-size: 0.92rem;
+}
+
+/* Items centrés */
+.navbar-nav.me-auto {
+  flex: 1 !important;
+  justify-content: center;
+  margin: 0 !important;
+}
+
+/* Pills sur item actif / hover */
+.navbar-nav .nav-link {
+  border-radius: 4px;
+  padding: 0.3rem 1.4rem !important;
+  transition: background 0.15s;
+}
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: white !important;
+}
+
+/* ── Hero / page header ── */
+#quarto-header ~ .quarto-title-banner,
+.quarto-title-banner {
+  background: var(--rtm-bg-soft);
+  border-bottom: 1px solid var(--rtm-border);
+}
+
+/* ── Bandeau d'accueil split ── */
+.hero-split {
+  display: flex;
+  margin-left:  calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  width: 100vw;
+  border-bottom: 1px solid var(--rtm-border);
+  min-height: 340px;
+}
+.hero-left {
+  background: var(--rtm-bg-soft);
+  flex: 0 0 40%;
+  padding: 3.5rem 3rem 3rem 6%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero-right {
+  flex: 1;
+  background: white;
+  display: flex;
+  border-left: 1px solid var(--rtm-border);
+}
+.hero-text {
+  flex: 1;
+  padding: 3rem 2rem 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--rtm-border);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--rtm-text);
+}
+.hero-diagram {
+  flex: 0 0 38%;
+  padding: 2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--rtm-primary);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.hero-left h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--rtm-primary);
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.hero-left p {
+  font-size: 1rem;
+  color: var(--rtm-text);
+  max-width: 340px;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+.hero-cta {
+  display: inline-block;
+  background: var(--rtm-primary);
+  color: white !important;
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  align-self: flex-start;
+}
+
+/* ── TOC ── */
+#TOC {
+  border-left: 2px solid var(--rtm-border);
+}
+#TOC a {
+  color: var(--rtm-text-soft);
+}
+#TOC a:hover,
+#TOC a.active {
+  color: var(--rtm-primary) !important;
+  font-weight: 600;
+}
+.sidebar nav[role=doc-toc] ul > li > a.active,
+.sidebar nav[role=doc-toc] ul > li > ul > li > a.active {
+  border-left: 1px solid var(--rtm-primary) !important;
+}
+
+/* ── Code blocks ── */
+pre.sourceCode {
+  background-color: var(--rtm-bg-soft);
+  border-left: 3px solid var(--rtm-primary);
+  border-radius: 0 6px 6px 0;
+}
+code {
+  color: var(--rtm-primary);
+  background-color: var(--rtm-bg-soft);
+  border: 1px solid var(--rtm-primary);
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+}
+
+/* ── Callouts ── */
+
+/* GxP -- vert pharma (callout-important) */
+div.callout-important {
+  border-left-color: var(--rtm-gxp) !important;
+}
+div.callout-important .callout-header {
+  background-color: color-mix(in srgb, var(--rtm-gxp) 10%, white);
+  color: var(--rtm-gxp);
+}
+
+/* Warning -- rouge anomalie */
+div.callout-warning {
+  border-left-color: var(--rtm-warn) !important;
+}
+div.callout-warning .callout-header {
+  background-color: color-mix(in srgb, var(--rtm-warn) 8%, white);
+  color: var(--rtm-warn);
+}
+
+/* Note -- info bleu */
+div.callout-note {
+  border-left-color: var(--rtm-accent) !important;
+}
+div.callout-note .callout-header {
+  background-color: color-mix(in srgb, var(--rtm-accent) 8%, white);
+  color: var(--rtm-accent);
+}
+
+/* ── Tags (classes manuelles dans le QMD) ── */
+.tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.tag-spc  { background: #cffafe; color: #164e63; }
+.tag-fmea { background: #fce7f3; color: #9d174d; }
+.tag-gxp  { background: #dcfce7; color: #14532d; }
+.tag-lyo  { background: #ccfbf1; color: #0f766e; }
+
+/* ── Cards episode (si utilisées en HTML brut dans un QMD) ── */
+.episode-card {
+  border: 1px solid var(--rtm-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  text-decoration: none;
+  color: var(--rtm-text);
+  display: flex;
+  gap: 1.25rem;
+  transition: border-color 0.15s;
+}
+.episode-card:hover {
+  border-color: var(--rtm-accent);
+}
+.episode-card h3 {
+  color: var(--rtm-primary);
+  margin-bottom: 0.3rem;
+}
+
+/* ── Figures LinkedIn -- fond légerement teinté ── */
+/* Appliquer .fig-linkedin dans le chunk pour forcer un fond visible */
+.fig-linkedin img {
+  background: var(--rtm-bg-soft);
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--rtm-border);
+}
+
+/* ── Footer ── */
+.nav-footer {
+  border-top: 1px solid var(--rtm-border);
+  color: var(--rtm-text-soft);
+  font-size: 0.85rem;
+}

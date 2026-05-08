@@ -1,0 +1,10 @@
+_site/
+_notes/
+.quarto/
+*.Rproj.user
+.Rhistory
+.RData
+HEX/
+images/
+
+/.quarto/

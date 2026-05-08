@@ -1,0 +1,11 @@
+---
+repo-actions: false
+code-tools: false
+title: "Part II -- Operations & I4.0/I5.0"
+subtitle: "Coming soon."
+---
+
+This part is in preparation.
+
+Topics planned: OEE and energy analytics, alarm rationalization,
+predictive maintenance, Industry 5.0 human-centric monitoring.

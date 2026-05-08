@@ -1,0 +1,59 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "toolbox/*.qmd"
+    - "!CLAUDE.md"
+    - "!STRATEGY.md"
+    - "!ROADMAP.md"
+    - "!LICENSE.md"
+    - "!chapters/equipment-drift-detection.qmd"
+    - "!chapters/cpv-and-the-equipment-gap.qmd"
+    - "!toolbox/simulateur lyo FR.Rmd"
+    - "!toolbox/spc-nelson.qmd"
+
+website:
+  title: "Reading the Machine"
+  description: >
+    Analytics for regulated manufacturing.
+    From machine logs to process signals -- SPC, FMEA, GxP compliance with R.
+  favicon: "HEX/logo-activity.svg"
+  repo-url: https://github.com/arnaudcoqueblin/reading-the-machine
+  repo-actions: [edit, issue]
+  page-navigation: true
+  navbar:
+    background: "#0f766e"
+    foreground: "white"
+    logo: "HEX/logo-activity.svg"
+    logo-alt: "Reading the Machine"
+    search: true
+    left:
+      - text: "Toolbox"
+        href: toolbox/index.qmd
+      - text: "Part I -- Pharma & GxP"
+        href: chapters/index.qmd
+      - text: "Part II -- Operations & I4.0/I5.0"
+        href: coming-soon.qmd
+      - text: "About"
+        menu:
+          - text: "Arnaud Coqueblin"
+            href: about.qmd
+          - text: "The Ecosystem"
+            href: ecosystem.qmd
+    right:
+      - icon: linkedin
+        href: https://www.linkedin.com/in/arnaudcoqueblin/
+        aria-label: LinkedIn
+
+format:
+  html:
+    theme: [cosmo, custom.scss]
+    code-fold: true
+    code-tools: true
+    fig-align: center
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    link-external-newwindow: true
+    include-after-body: js/tabs-scroll.js

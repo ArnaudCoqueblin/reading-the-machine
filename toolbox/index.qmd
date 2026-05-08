@@ -1,0 +1,16 @@
+---
+title: "Toolbox"
+subtitle: "Methods for machine log analytics and process monitoring."
+code-tools: false
+repo-actions: false
+listing:
+  contents:
+    - "machinelogr.qmd"
+    - "fdsim.qmd"
+  type: default
+  sort: "order"
+  fields: [title, subtitle, description]
+  categories: true
+---
+
+Methods are documented here as standalone references.

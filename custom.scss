@@ -1,0 +1,324 @@
+/*-- scss:defaults --*/
+
+// Palette de base -- surcharge Bootstrap avant compilation
+$body-bg:          #ffffff;
+$body-color:       #0f172a;
+$link-color:       #0891b2;
+$link-hover-color: #0f766e;
+$headings-color:   #0f766e;
+
+// Code inline et blocs
+$code-color: #0f766e;
+$code-bg:    #f0fdf9;
+$pre-bg:     #f0fdf9;
+
+// Callouts -- Quarto derive couleur bord + fond header + icone depuis une seule valeur
+$callout-color-note:    #0891b2;  // bleu info
+$callout-color-warning: #b91c1c;  // rouge anomalie
+// callout-important : rouge Quarto par defaut (convention a respecter)
+
+/*-- scss:rules --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Audiowide&display=swap');
+
+/* ── Variables CSS (conservees pour composants HTML brut) ── */
+:root {
+  --rtm-primary:   #0f766e;
+  --rtm-accent:    #0891b2;
+  --rtm-gxp:       #166534;
+  --rtm-warn:      #b91c1c;
+  --rtm-bg:        #ffffff;
+  --rtm-bg-soft:   #f0fdf9;
+  --rtm-border:    #d1fae5;
+  --rtm-text:      #0f172a;
+  --rtm-text-soft: #475569;
+}
+
+/* ── Headings (fallback si $headings-color non pris par la version Bootstrap) ── */
+h1, h2, h3, h4 {
+  color: var(--rtm-primary);
+}
+
+/* Noms de projets en gras dans les listes */
+li strong {
+  color: var(--rtm-accent);
+}
+
+/* Classes semantiques */
+.gxp  { color: var(--rtm-gxp);  font-weight: 600; }
+.tech { color: #c2410c; font-weight: 600; }
+
+/* ── Navbar ── */
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.navbar-brand {
+  font-family: 'Audiowide', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-size: 1.35rem;
+}
+.navbar-brand img {
+  border-radius: 2px;
+}
+.navbar-nav .nav-link {
+  font-size: 0.92rem;
+  border-radius: 4px;
+  padding: 0.3rem 1.4rem !important;
+  transition: background 0.15s;
+}
+.navbar-nav.me-auto {
+  flex: 1 !important;
+  justify-content: center;
+  margin: 0 !important;
+}
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: white !important;
+}
+
+/* ── Hero / page header ── */
+#quarto-header ~ .quarto-title-banner,
+.quarto-title-banner {
+  background: var(--rtm-bg-soft);
+  border-bottom: 1px solid var(--rtm-border);
+}
+
+/* ── Bandeau d'accueil split ── */
+.hero-split {
+  display: flex;
+  margin-left:  calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  width: 100vw;
+  border-bottom: 1px solid var(--rtm-border);
+  min-height: 340px;
+}
+.hero-left {
+  background: var(--rtm-bg-soft);
+  flex: 0 0 40%;
+  padding: 3.5rem 3rem 3rem 6%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero-right {
+  flex: 1;
+  background: white;
+  display: flex;
+  border-left: 1px solid var(--rtm-border);
+}
+.hero-text {
+  flex: 1;
+  padding: 3rem 2rem 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--rtm-border);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--rtm-text);
+}
+.hero-diagram {
+  flex: 0 0 38%;
+  padding: 2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--rtm-primary);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.hero-left h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--rtm-primary);
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.hero-left h1 .series-name {
+  color: var(--rtm-primary);
+  font-family: 'Audiowide', sans-serif;
+  font-style: normal;
+  font-size: 1.65rem;
+  display: block;
+}
+.hero-left p {
+  font-size: 1rem;
+  color: var(--rtm-text);
+  max-width: 340px;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+.hero-cta {
+  display: inline-block;
+  background: var(--rtm-primary);
+  color: white !important;
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  align-self: flex-start;
+}
+
+/* ── TOC ── */
+#TOC {
+  border-left: 2px solid var(--rtm-border);
+}
+#TOC a {
+  color: var(--rtm-text-soft);
+}
+#TOC a:hover,
+#TOC a.active {
+  color: var(--rtm-primary) !important;
+  font-weight: 600;
+}
+.sidebar nav[role=doc-toc] ul > li > a.active,
+.sidebar nav[role=doc-toc] ul > li > ul > li > a.active {
+  border-left: 1px solid var(--rtm-primary) !important;
+}
+
+/* ── Code blocks ── */
+pre.sourceCode {
+  background-color: var(--rtm-bg-soft);
+  border-left: 3px solid var(--rtm-primary);
+  border-radius: 0 6px 6px 0;
+}
+code {
+  color: var(--rtm-primary);
+  background-color: var(--rtm-bg-soft);
+  border: 1px solid var(--rtm-primary);
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+}
+
+/* ── Tags ── */
+.tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.tag-spc  { background: #cffafe; color: #164e63; }
+.tag-fmea { background: #fce7f3; color: #9d174d; }
+.tag-gxp  { background: #dcfce7; color: #14532d; }
+.tag-lyo  { background: #ccfbf1; color: #0f766e; }
+
+/* ── Cards episode ── */
+.episode-card {
+  border: 1px solid var(--rtm-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  text-decoration: none;
+  color: var(--rtm-text);
+  display: flex;
+  gap: 1.25rem;
+  transition: border-color 0.15s;
+}
+.episode-card:hover {
+  border-color: var(--rtm-accent);
+}
+.episode-card h3 {
+  color: var(--rtm-primary);
+  margin-bottom: 0.3rem;
+}
+
+/* ── Figures LinkedIn ── */
+.fig-linkedin img {
+  background: var(--rtm-bg-soft);
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--rtm-border);
+}
+
+/* ── Panel tabset ── */
+.panel-tabset .nav-tabs {
+  position: sticky;
+  top: 58px;           /* hauteur navbar Bootstrap */
+  z-index: 90;
+  background: white;
+  border-bottom: none;
+  margin-bottom: 1rem;
+  box-shadow: 0 3px 8px rgba(15, 118, 110, 0.12);
+  border-radius: 0 6px 0 0;
+  padding-bottom: 2px;
+  padding-top: 6px;
+}
+.panel-tabset .nav-tabs .nav-link {
+  background: var(--rtm-bg-soft);
+  color: var(--rtm-primary);
+  border: 1px solid var(--rtm-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-right: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.panel-tabset .nav-tabs .nav-link:hover {
+  background: var(--rtm-border);
+  color: var(--rtm-primary);
+}
+.panel-tabset .nav-tabs .nav-link.active {
+  background: var(--rtm-primary);
+  color: white;
+  border-color: var(--rtm-primary);
+}
+
+/* ── Chapter navigation ── */
+.nav-chapter-next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2.5rem;
+}
+.nav-chapter-next a {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  padding: 1rem 1.4rem;
+  border: 1px solid var(--rtm-border);
+  border-radius: 8px;
+  text-decoration: none !important;
+  background: var(--rtm-bg-soft);
+  transition: border-color 0.15s, background 0.15s;
+  max-width: 420px;
+}
+.nav-chapter-next a:hover {
+  border-color: var(--rtm-primary);
+  background: white;
+}
+.nav-chapter-next .nav-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rtm-primary);
+}
+.nav-chapter-next .nav-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--rtm-text);
+  text-align: right;
+}
+.nav-chapter-next .nav-subtitle {
+  font-size: 0.82rem;
+  color: var(--rtm-text-soft);
+  text-align: right;
+}
+
+/* ── Footer ── */
+.nav-footer {
+  border-top: 1px solid var(--rtm-border);
+  color: var(--rtm-text-soft);
+  font-size: 0.85rem;
+}
