@@ -1,6 +1,5 @@
 ---
-title: "How to challenge a FMEA with historian data."
-subtitle: "From D=7 to D=2 without changing the equipment."
+title: "How to challenge a FMEA with historian data"
 date: 2026-05-17
 categories: [fmea, spc, lyo, gxp]
 order: 3
@@ -54,9 +53,13 @@ N            <- params$N
 params_pump  <- params$pC2
 ALARM_THRESH <- params_pump$P_ch_setpt * params_pump$pump_alarm_P_frac
 STABLE_LOTS  <- params_pump$pump_stable_lots
+SEED         <- params$SEED
 
-# HMM : premier lot où l'état dominant est dégradé (majority rule)
-det_lot_first <- hmm_pump_C2$det_lot
+# HMM : premier lot avec au moins un cycle dégradé
+det_lot_first <- hmm_pump_C2$posterior |>
+  dplyr::filter(hmm_state != hmm_pump_C2$healthy_state) |>
+  dplyr::pull(lot) |>
+  min()
 
 # Durées des états HMM (depuis le cache, pas hardcodées)
 .e           <- hmm_pump_C2$emission_s
@@ -66,8 +69,6 @@ dur_advanced <- round(.e$elapsed_mean_s[.e$hmm_state == hmm_pump_C2$advanced_sta
 lbl_healthy  <- paste0("Healthy (", dur_healthy, " s/cycle)")
 lbl_early    <- paste0("Early degradation (", dur_early, " s/cycle)")
 lbl_advanced <- paste0("Advanced degradation (", dur_advanced, " s/cycle)")
-
-SEED         <- params$SEED
 
 # Proportions d'états par lot (pour la figure proportion)
 prop_by_lot <- hmm_pump_C2$posterior |>
@@ -90,7 +91,7 @@ res_pump <- connect_fmea_to_log(
 ```
 
 With `FDSim`, the freeze-drying simulator, and `machinelogR`, the analytics package,\
-let's see how we can challenge a **FMEA** *Detectability* score with historian data.
+let's see how we can challenge two **FMEA** scores: *Occurrence* and *Detectability*.
 
 ## The scenario
 
@@ -107,7 +108,7 @@ classDef rising  fill:#fff3e0,stroke:#d97706,color:#333
 classDef product fill:#fffde7,stroke:#f59e0b,color:#333
 classDef danger  fill:#fef2f2,stroke:#b91c1c,color:#b91c1c
 
-A["Pump<br/>loses<br/>capacity"]:::pump -->|less vacuum| B["Chamber<br/>pressure<br/>rises"]:::rising -->|same shelf temp| C["Max vial<br/>temperature<br/>rises"]:::product -->|approaches<br/>critical temp| D["Batch<br/>at risk"]:::danger
+A["<img src='https://api.iconify.design/material-symbols:water-pump-outline.svg' width='28' height='28'/><br/><b>Pump</b><br/>loses<br/>capacity"]:::pump -->|less<br/>vacuum| B["<img src='https://api.iconify.design/lucide:gauge.svg' width='28' height='28'/><br/><b>Chamber<br/>Pressure</b><br/>rises"]:::rising -->|with the same<br/>shelf temp.| C["<img src='https://api.iconify.design/lucide:thermometer.svg' width='28' height='28'/><br/><b>Max vial<br/>temperature</b><br/>rises"]:::product -->|approaches<br/>critical temp.| D["<img src='https://api.iconify.design/lucide:triangle-alert.svg' width='28' height='28'/><br/><b>Batch</b><br/>at risk"]:::danger
 ```
 
 For this demo, I've set a **pump degradation** starting at batch **16**.\
@@ -313,7 +314,7 @@ We can now set D=6 (band 5-6): the log is periodically reviewed, but there's sti
 **O -- Occurrence:**\
 The pipeline revealed `n_events / total_batches`  =  8 alarm events over 50 batches  =  **16%**.\
 The declared O=4 was an expert estimate.\
-The log now puts a number on it, but how acceptable is 16%? Without a reliable scoring grid, I'll leave O=4 for the rest of this demo. With a scoring grid, O could be better than expected... or worse.
+The log now puts a number on it, but how acceptable is 16%? Unfortunately, without a reliable scoring grid, I'll leave O=4 for the rest of this demo. With a scoring grid, O could be better than expected... or worse.
 
 Now with a D=6 and O=4, the RPN drops from 196 to 168.
 
@@ -467,8 +468,7 @@ ggplot(
 ```
 
 [First degraded cycles at batch `r det_lot_first`]{.solution}, **`r det_lot_first - ONSET` batches after onset.**\
-The HMM assigns individual ON-cycles to a degraded state as soon as the pump capacity drops measurably.\
-No batch average, no threshold crossing: the cycle-level distribution shifts first.\
+The HMM assigns individual ON-cycles to a degraded state as soon as the pump capacity drops significantly.\
 The Detectability D drops to 2.
 
 ### Conclusion
@@ -537,7 +537,6 @@ reactable(
 )
 ```
 
-From D=7 to D=2, the RPN dropped from `r S_pump * O_pump * 7L` to `r S_pump * O_pump * 2L`, without touching severity or occurrence.\
+From D=7 to D=2, the RPN dropped from `r S_pump * O_pump * 7L` to `r S_pump * O_pump * 2L`, without touching Severity or Occurrence.\
 Just by improving the monitoring method.\
-The closer the signal to the failure mechanism, the earlier the detection.\
-The HMM flagged the first degraded cycles `r det_lot_first - ONSET` batches after onset, before any batch average had moved.
+The closer the signal to the failure mechanism, the earlier the detection.
