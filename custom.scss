@@ -8,8 +8,8 @@ $link-hover-color: #0f766e;
 $headings-color:   #0f766e;
 
 // Code inline et blocs
-$code-color: #0f766e;
-$code-bg:    #f0fdf9;
+$code-color: #334155;
+$code-bg:    #f1f5f9;
 $pre-bg:     #f0fdf9;
 
 // Callouts -- Quarto derive couleur bord + fond header + icone depuis une seule valeur
@@ -27,6 +27,8 @@ $callout-color-warning: #b91c1c;  // rouge anomalie
   --rtm-accent:    #0891b2;
   --rtm-gxp:       #166534;
   --rtm-warn:      #b91c1c;
+  --rtm-problem:   #d97706;   /* amber-600 : gap, D eleve, ce qui manque */
+  --rtm-solution:  #2563eb;   /* blue-600  : ce que les donnees revelent  */
   --rtm-bg:        #ffffff;
   --rtm-bg-soft:   #f0fdf9;
   --rtm-border:    #d1fae5;
@@ -39,14 +41,29 @@ h1, h2, h3, h4 {
   color: var(--rtm-primary);
 }
 
-/* Noms de projets en gras dans les listes */
-li strong {
+/* Noms de projets en gras dans les cards -- scoped pour eviter bleeding dans contenu */
+.episode-card li strong,
+.hero-text li strong {
   color: var(--rtm-accent);
 }
 
 /* Classes semantiques */
-.gxp  { color: var(--rtm-gxp);  font-weight: 600; }
-.tech { color: #c2410c; font-weight: 600; }
+.gxp      { color: var(--rtm-gxp);      font-weight: 600; }
+.tech     { color: #c2410c;             font-weight: 600; }
+.problem  {
+  color: var(--rtm-problem);
+  font-weight: 700;
+  background-color: #fef3c7;
+  padding: 0.05em 0.25em;
+  border-radius: 3px;
+}
+.solution {
+  color: var(--rtm-solution);
+  font-weight: 700;
+  background-color: #eff6ff;
+  padding: 0.05em 0.25em;
+  border-radius: 3px;
+}
 
 /* ── Navbar ── */
 .navbar {
@@ -191,9 +208,9 @@ pre.sourceCode {
   border-radius: 0 6px 6px 0;
 }
 code {
-  color: var(--rtm-primary);
-  background-color: var(--rtm-bg-soft);
-  border: 1px solid var(--rtm-primary);
+  color: #334155;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 3px;
   padding: 0.1rem 0.3rem;
 }
@@ -314,6 +331,11 @@ code {
   font-size: 0.82rem;
   color: var(--rtm-text-soft);
   text-align: right;
+}
+
+/* ── Mermaid -- fond blanc, pas de fond gris par defaut ── */
+.mermaid, pre.mermaid {
+  background: white !important;
 }
 
 /* ── Footer ── */

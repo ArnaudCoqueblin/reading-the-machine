@@ -1,10 +1,25 @@
 ---
 title: "Part I -- Pharma & GxP"
-subtitle: "Coming soon."
 code-tools: false
 repo-actions: false
 ---
 
-This part is in preparation.
+Analytical methods for regulated manufacturing: continuous process verification, equipment monitoring, FMEA-driven signal selection.
 
-Topics planned: CPV and equipment monitoring, audit trail analytics, FMEA-driven signal selection, freeze-dryer case study.
+---
+
+```{=html}
+<div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem;">
+
+<div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem;">
+  <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.4rem;">FMEA &bull; SPC &bull; Lyophilisation</div>
+  <a href="fmea-and-historian-data.html" style="font-size: 1.1rem; font-weight: 600; color: #0f766e; text-decoration: none;">
+    How to challenge a FMEA with historian data.
+  </a>
+  <p style="margin: 0.6rem 0 0; color: #475569; font-size: 0.95rem;">
+    From D=7 to D=2 without changing the equipment. SPC, pump duty cycle, and intra-cycle HMM applied to a lyophilizer case study.
+  </p>
+</div>
+
+</div>
+```

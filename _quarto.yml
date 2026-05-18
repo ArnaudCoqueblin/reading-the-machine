@@ -8,6 +8,7 @@ project:
     - "!STRATEGY.md"
     - "!ROADMAP.md"
     - "!LICENSE.md"
+    - "chapters/fmea-and-historian-data.qmd"
     - "!chapters/equipment-drift-detection.qmd"
     - "!chapters/cpv-and-the-equipment-gap.qmd"
     - "!toolbox/simulateur lyo FR.Rmd"
