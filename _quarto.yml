@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: _site
+  resources:
+    - googledf2cec22e34f6f92.html
   render:
     - "*.qmd"
     - "toolbox/*.qmd"
